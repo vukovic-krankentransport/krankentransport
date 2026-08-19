@@ -15,83 +15,162 @@
         th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
         th { background: #007bff; color: white; }
         .badge-infekcija { background: #dc3545; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        
+        /* Tabovi */
+        .tab-buttons { margin-bottom: 15px; }
+        .tab-btn { width: auto; padding: 10px 20px; margin-right: 5px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .tab-btn.active { background: #007bff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
     <h2>Dispečerski Panel - Krankentransport</h2>
 
-    <div class="form-card">
-        <h3>Unos novog naloga</h3>
-        <div class="grid-form">
-            <div>
-                <label><b>Dodeljeno vozilo:</b></label>
-                <select id="vozilo">
-                    <script>
-                        for(let i=1; i<=10; i++) {
-                            document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
-                        }
-                    </script>
-                </select>
+    <!-- TAB DUGMAD -->
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="otvoriTab('radnaTabla')">📋 Radna Tabla (Uživo)</button>
+        <button class="tab-btn" onclick="otvoriTab('historijaTab')">📂 Arhiva & Istorija Vožnji</button>
+    </div>
+
+    <!-- TAB 1: RADNA TABLA (UŽIVO) -->
+    <div id="radnaTabla" class="tab-content active">
+        <div class="form-card">
+            <h3>Unos novog naloga</h3>
+            <div class="grid-form">
+                <div>
+                    <label><b>Dodeljeno vozilo:</b></label>
+                    <select id="vozilo">
+                        <script>
+                            for(let i=1; i<=10; i++) {
+                                document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
+                            }
+                        </script>
+                    </select>
+                </div>
+                <div>
+                    <label><b>Ime i prezime pacijenta:</b></label>
+                    <input type="text" id="pacijent" placeholder="Ime i Prezime">
+                </div>
+                <div>
+                    <label><b>Kranckenkasse / Osiguranje:</b></label>
+                    <input type="text" id="kasa" placeholder="Npr. AOK, Barmer...">
+                </div>
+                <div>
+                    <label><b>Vreme preuzimanja:</b></label>
+                    <input type="time" id="vreme">
+                </div>
+                <div>
+                    <label><b>Adresa preuzimanja (Polazak):</b></label>
+                    <input type="text" id="adresaPolazak" placeholder="Ulica, broj, grad">
+                </div>
+                <div>
+                    <label><b>Odredište (Gde se vozi):</b></label>
+                    <input type="text" id="adresaOdrediste" placeholder="Klinika / Ulica">
+                </div>
+                <div>
+                    <label><b>Infektivni pacijent:</b></label>
+                    <select id="infekcija">
+                        <option value="NE">NE</option>
+                        <option value="DA">DA (Infektioos)</option>
+                    </select>
+                </div>
+                <div>
+                    <label><b>Napomena za vozača:</b></label>
+                    <input type="text" id="napomena" placeholder="Kolica, ležeći, sprat...">
+                </div>
             </div>
-            <div>
-                <label><b>Ime i prezime pacijenta:</b></label>
-                <input type="text" id="pacijent" placeholder="Ime i Prezime">
-            </div>
-            <div>
-                <label><b>Kranckenkasse / Osiguranje:</b></label>
-                <input type="text" id="kasa" placeholder="Npr. AOK, Barmer...">
-            </div>
-            <div>
-                <label><b>Vreme preuzimanja:</b></label>
-                <input type="time" id="vreme">
-            </div>
-            <div>
-                <label><b>Adresa preuzimanja (Polazak):</b></label>
-                <input type="text" id="adresaPolazak" placeholder="Ulica, broj, grad">
-            </div>
-            <div>
-                <label><b>Odredište (Gde se vozi):</b></label>
-                <input type="text" id="adresaOdrediste" placeholder="Klinika / Ulica">
-            </div>
-            <div>
-                <label><b>Infektivni pacijent:</b></label>
-                <select id="infekcija">
-                    <option value="NE">NE</option>
-                    <option value="DA">DA (Infektioos)</option>
-                </select>
-            </div>
-            <div>
-                <label><b>Napomena za vozača:</b></label>
-                <input type="text" id="napomena" placeholder="Kolica, ležeći, sprat...">
+            <button class="btn-submit" onclick="dodajNalog()">Pošalji Vozaču</button>
+        </div>
+
+        <h3>Aktivni Nalozi Uživo</h3>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vozilo</th>
+                        <th>Vreme</th>
+                        <th>Pacijent</th>
+                        <th>Kasa</th>
+                        <th>Polazak</th>
+                        <th>Odredište</th>
+                        <th>Infekcija</th>
+                        <th>Napomena</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaNaloga"></tbody>
+            </table>
+        </div>
+
+        <button class="btn-reset" onclick="resetujNoviDan()">Započni novi dan (Očisti radnu tablu za vozače)</button>
+    </div>
+
+    <!-- TAB 2: ARHIVA & ISTORIJA VOŽNJI -->
+    <div id="historijaTab" class="tab-content">
+        <div class="form-card">
+            <h3>Pretraga istorije vožnji</h3>
+            <div class="grid-form">
+                <div>
+                    <label><b>Izaberite datum:</b></label>
+                    <input type="date" id="filterDatum" onchange="ucitajHistoriju()">
+                </div>
+                <div>
+                    <label><b>Filtrirajte po vozilu:</b></label>
+                    <select id="filterVozilo" onchange="ucitajHistoriju()">
+                        <option value="Sva vozila">Sva vozila</option>
+                        <script>
+                            for(let i=1; i<=10; i++) {
+                                document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
+                            }
+                        </script>
+                    </select>
+                </div>
+                <div>
+                    <label><b>Brza pretraga po imenu:</b></label>
+                    <input type="text" id="filterPretraga" onkeyup="filtrirajPoImenu()" placeholder="Pretraži pacijenta...">
+                </div>
             </div>
         </div>
-        <button class="btn-submit" onclick="dodajNalog()">Pošalji Vozaču</button>
-    </div>
 
-    <h3>Aktivni Nalozi Uživo</h3>
-    <div style="overflow-x:auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Vozilo</th>
-                    <th>Vreme</th>
-                    <th>Pacijent</th>
-                    <th>Kasa</th>
-                    <th>Polazak</th>
-                    <th>Odredište</th>
-                    <th>Infekcija</th>
-                    <th>Napomena</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tabelaNaloga"></tbody>
-        </table>
+        <h3>Pregled Arhive</h3>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Vozilo</th>
+                        <th>Vreme</th>
+                        <th>Pacijent</th>
+                        <th>Kasa</th>
+                        <th>Polazak</th>
+                        <th>Odredište</th>
+                        <th>Infekcija</th>
+                        <th>Konačni Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaHistorija"></tbody>
+            </table>
+        </div>
     </div>
-
-    <button class="btn-reset" onclick="resetujNoviDan()">Započni novi dan (Očisti sve naloge)</button>
 
     <script>
+        // Postavi današnji datum u filter za istoriju na startu
+        document.getElementById('filterDatum').value = new Date().toISOString().split('T')[0];
+
+        function otvoriTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if(tabName === 'historijaTab') {
+                ucitajHistoriju();
+            }
+        }
+
         async function dodajNalog() {
             const vozilo = document.getElementById('vozilo').value;
             const pacijent = document.getElementById('pacijent').value;
@@ -142,8 +221,51 @@
             });
         }
 
+        let arhivaPodaci = [];
+
+        async function ucitajHistoriju() {
+            const datum = document.getElementById('filterDatum').value;
+            const vozilo = document.getElementById('filterVozilo').value;
+
+            const res = await fetch(`/api/historija?datum=${datum}&vozilo=${vozilo}`);
+            arhivaPodaci = await res.json();
+            prikaziArhivu(arhivaPodaci);
+        }
+
+        function prikaziArhivu(podaci) {
+            const tabela = document.getElementById('tabelaHistorija');
+            tabela.innerHTML = '';
+
+            if(podaci.length === 0) {
+                tabela.innerHTML = '<tr><td colspan="9" style="text-align:center;">Nema sačuvanih vožnji za izabrani datum i vozilo.</td></tr>';
+                return;
+            }
+
+            podaci.forEach(v => {
+                tabela.innerHTML += `
+                    <tr>
+                        <td>${v.datum}</td>
+                        <td><b>${v.vozilo}</b></td>
+                        <td>${v.vreme || '-'}</td>
+                        <td><b>${v.pacijent}</b></td>
+                        <td>${v.kasa || '-'}</td>
+                        <td>${v.adresaPolazak}</td>
+                        <td>${v.adresaOdrediste || '-'}</td>
+                        <td>${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA</span>' : 'NE'}</td>
+                        <td><span style="color: green; font-weight: bold;">${v.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filtrirajPoImenu() {
+            const pojam = document.getElementById('filterPretraga').value.toLowerCase();
+            const filtrirano = arhivaPodaci.filter(v => v.pacijent.toLowerCase().includes(pojam));
+            prikaziArhivu(filtrirano);
+        }
+
         async function resetujNoviDan() {
-            if(confirm("Da li ste sigurni da želite da obrišete sve naloge i započnete novi dan?")) {
+            if(confirm("Da li ste sigurni da želite da očistite radnu tablu? (Sve vožnje ostaju sačuvane u Arhivi)")) {
                 await fetch('/api/reset', { method: 'POST' });
                 ucitaj();
             }
