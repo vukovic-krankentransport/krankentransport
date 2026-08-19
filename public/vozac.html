@@ -85,7 +85,8 @@
                         <button class="btn ${v.status === 'Prihvaćeno' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Prihvaćeno')">1. Prihvaćeno</button>
                         <button class="btn ${v.status === 'Na adresi' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Na adresi')">2. Na adresi</button>
                         <button class="btn ${v.status === 'Pacijent u vozilu' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Pacijent u vozilu')">3. Pacijent u vozilu</button>
-                        <button class="btn ${v.status === 'Završeno' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Završeno')">4. Završeno (Skloni nalog)</button>
+                        <button class="btn ${v.status === 'Predat pacijent' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Predat pacijent')">4. Predat pacijent</button>
+                        <button class="btn ${v.status === 'Završeno' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Završeno')">5. Završeno (Skloni nalog)</button>
                     </div>
                 `;
             });
