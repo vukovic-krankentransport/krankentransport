@@ -3,7 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static('public'));
 
 let voznje = [];
 
@@ -16,7 +16,7 @@ app.get('/api/voznje', (req, res) => {
 app.post('/api/voznje', (req, res) => {
     const novaVoznja = {
         id: Date.now(),
-        vozilo: req.body.vozilo, // Vozilo 1 do Vozilo 10
+        vozilo: req.body.vozilo,
         pacijent: req.body.pacijent,
         adresa: req.body.adresa,
         napomena: req.body.napomena || '',
@@ -39,7 +39,7 @@ app.post('/api/status', (req, res) => {
     }
 });
 
-// Resetovanje / Novi dan (Brisanje vožnji)
+// Resetovanje / Novi dan
 app.post('/api/reset', (req, res) => {
     voznje = [];
     res.json({ success: true });
