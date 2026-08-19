@@ -10,7 +10,9 @@
         select { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 15px; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; background-color: #007bff; }
         .btn.active { background-color: #6c757d !important; cursor: not-allowed; }
-        .info { font-size: 14px; color: #555; margin-bottom: 5px; }
+        .info { font-size: 15px; color: #333; margin-bottom: 6px; }
+        .nav-link { display: inline-block; background: #17a2b8; color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; margin-top: 5px; margin-bottom: 5px; }
+        .badge-infekcija { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -62,11 +64,23 @@
             }
 
             mojeVoznje.forEach(v => {
+                const mapsPolazak = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.adresaPolazak)}`;
+                const mapsOdrediste = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.adresaOdrediste)}`;
+
                 kontejner.innerHTML += `
                     <div class="card">
                         <h3>Pacijent: ${v.pacijent}</h3>
-                        <p class="info"><b>Adresa:</b> ${v.adresa}</p>
-                        <p class="info"><b>Napomena:</b> ${v.napomena || 'Nema'}</p>
+                        <p class="info"><b>Kasa / Osiguranje:</b> ${v.kasa || 'Nije navedeno'}</p>
+                        <p class="info"><b>Vreme preuzimanja:</b> <span style="color:red; font-weight:bold;">${v.vreme || 'Hitno'}</span></p>
+                        <p class="info"><b>Infekcija:</b> ${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA (Oprez!)</span>' : 'NE'}</p>
+                        <hr>
+                        <p class="info"><b>Polazak:</b> ${v.adresaPolazak}</p>
+                        <a href="${mapsPolazak}" target="_blank" class="nav-link">📍 Navigacija do polaska</a>
+                        
+                        <p class="info" style="margin-top:10px;"><b>Odredište:</b> ${v.adresaOdrediste || 'Nije navedeno'}</p>
+                        ${v.adresaOdrediste ? `<a href="${mapsOdrediste}" target="_blank" class="nav-link">🏁 Navigacija do odredišta</a>` : ''}
+                        
+                        <p class="info" style="margin-top:10px;"><b>Napomena:</b> ${v.napomena || 'Nema'}</p>
                         <hr>
                         <button class="btn ${v.status === 'Prihvaćeno' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Prihvaćeno')">1. Prihvaćeno</button>
                         <button class="btn ${v.status === 'Na adresi' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Na adresi')">2. Na adresi</button>
