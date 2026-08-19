@@ -15,7 +15,9 @@
         th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
         th { background: #007bff; color: white; }
         .badge-infekcija { background: #dc3545; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
-        
+        .badge-transport { background: #6c757d; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        .badge-lezeci { background: #fd7e14; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+
         /* Tabovi */
         .tab-buttons { margin-bottom: 15px; }
         .tab-btn { width: auto; padding: 10px 20px; margin-right: 5px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
@@ -58,8 +60,19 @@
                     <input type="text" id="kasa" placeholder="Npr. AOK, Barmer...">
                 </div>
                 <div>
+                    <label><b>Datum:</b></label>
+                    <input type="date" id="datum">
+                </div>
+                <div>
                     <label><b>Vreme preuzimanja:</b></label>
                     <input type="time" id="vreme">
+                </div>
+                <div>
+                    <label><b>Tip transporta:</b></label>
+                    <select id="tipTransporta">
+                        <option value="Sedeći">🚶 Sedeći (Sitzend)</option>
+                        <option value="Ležeći">🛏️ Ležeći (Liegend)</option>
+                    </select>
                 </div>
                 <div>
                     <label><b>Adresa preuzimanja (Polazak):</b></label>
@@ -89,10 +102,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Vozilo</th>
+                        <th>Nalog br.</th>
+                        <th>Datum</th>
                         <th>Vreme</th>
+                        <th>Vozilo</th>
                         <th>Pacijent</th>
                         <th>Kasa</th>
+                        <th>Transport</th>
                         <th>Polazak</th>
                         <th>Odredište</th>
                         <th>Infekcija</th>
@@ -139,11 +155,13 @@
             <table>
                 <thead>
                     <tr>
+                        <th>Nalog br.</th>
                         <th>Datum</th>
-                        <th>Vozilo</th>
                         <th>Vreme</th>
+                        <th>Vozilo</th>
                         <th>Pacijent</th>
                         <th>Kasa</th>
+                        <th>Transport</th>
                         <th>Polazak</th>
                         <th>Odredište</th>
                         <th>Infekcija</th>
@@ -156,8 +174,10 @@
     </div>
 
     <script>
-        // Postavi današnji datum u filter za istoriju na startu
-        document.getElementById('filterDatum').value = new Date().toISOString().split('T')[0];
+        // Postavi današnji datum u formu i filter
+        const danasnjiDatum = new Date().toISOString().split('T')[0];
+        document.getElementById('datum').value = danasnjiDatum;
+        document.getElementById('filterDatum').value = danasnjiDatum;
 
         function otvoriTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -175,7 +195,9 @@
             const vozilo = document.getElementById('vozilo').value;
             const pacijent = document.getElementById('pacijent').value;
             const kasa = document.getElementById('kasa').value;
+            const datum = document.getElementById('datum').value;
             const vreme = document.getElementById('vreme').value;
+            const tipTransporta = document.getElementById('tipTransporta').value;
             const adresaPolazak = document.getElementById('adresaPolazak').value;
             const adresaOdrediste = document.getElementById('adresaOdrediste').value;
             const infekcija = document.getElementById('infekcija').value;
@@ -186,7 +208,7 @@
             await fetch('/api/voznje', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vozilo, pacijent, kasa, vreme, adresaPolazak, adresaOdrediste, infekcija, napomena })
+                body: JSON.stringify({ vozilo, pacijent, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena })
             });
 
             document.getElementById('pacijent').value = '';
@@ -205,12 +227,16 @@
             tabela.innerHTML = '';
 
             podaci.forEach(v => {
+                const badgeKlasa = v.tipTransporta === 'Ležeći' ? 'badge-lezeci' : 'badge-transport';
                 tabela.innerHTML += `
                     <tr>
-                        <td><b>${v.vozilo}</b></td>
+                        <td><b>#${v.id}</b></td>
+                        <td>${v.datum || '-'}</td>
                         <td><b>${v.vreme || '-'}</b></td>
+                        <td><b>${v.vozilo}</b></td>
                         <td>${v.pacijent}</td>
                         <td>${v.kasa || '-'}</td>
+                        <td><span class="${badgeKlasa}">${v.tipTransporta || 'Sedeći'}</span></td>
                         <td>${v.adresaPolazak}</td>
                         <td>${v.adresaOdrediste || '-'}</td>
                         <td>${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA</span>' : 'NE'}</td>
@@ -237,18 +263,21 @@
             tabela.innerHTML = '';
 
             if(podaci.length === 0) {
-                tabela.innerHTML = '<tr><td colspan="9" style="text-align:center;">Nema sačuvanih vožnji za izabrani datum i vozilo.</td></tr>';
+                tabela.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nema sačuvanih vožnji za izabrani datum i vozilo.</td></tr>';
                 return;
             }
 
             podaci.forEach(v => {
+                const badgeKlasa = v.tipTransporta === 'Ležeći' ? 'badge-lezeci' : 'badge-transport';
                 tabela.innerHTML += `
                     <tr>
+                        <td><b>#${v.id}</b></td>
                         <td>${v.datum}</td>
-                        <td><b>${v.vozilo}</b></td>
                         <td>${v.vreme || '-'}</td>
+                        <td><b>${v.vozilo}</b></td>
                         <td><b>${v.pacijent}</b></td>
                         <td>${v.kasa || '-'}</td>
+                        <td><span class="${badgeKlasa}">${v.tipTransporta || 'Sedeći'}</span></td>
                         <td>${v.adresaPolazak}</td>
                         <td>${v.adresaOdrediste || '-'}</td>
                         <td>${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA</span>' : 'NE'}</td>
@@ -265,7 +294,7 @@
         }
 
         async function resetujNoviDan() {
-            if(confirm("Da li ste sigurni da želite da očistite radnu tablu? (Sve vožnje ostaju sačuvane u Arhivi)")) {
+            if(confirm("Da li ste sigurni da želite da očistite radnu tablu za vozače? (Sve vožnje ostaju sačuvane u Arhivi)")) {
                 await fetch('/api/reset', { method: 'POST' });
                 ucitaj();
             }
