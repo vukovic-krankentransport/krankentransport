@@ -3,90 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dispečer</title>
+    <title>Dispečer Panel - Krankentransport</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
-        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        input, select, button, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; box-sizing: border-box; }
-        button { background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .nalog-item { border-left: 5px solid #007bff; padding: 15px; margin-bottom: 15px; background: #fafafa; border-radius: 4px; }
-        .badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; background: #e2e8f0; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #eef2f5; }
+        .form-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; font-size: 15px; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-reset { background: #dc3545; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background: #007bff; color: white; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>💻 DISPEČERSKI PANEL - Novi nalog</h2>
-        <form id="nalogForm">
-            <label>Pacijent:</label>
-            <input type="text" id="pacijent" required placeholder="Ime i prezime">
-            <label>Adresa preuzimanja:</label>
-            <input type="text" id="prijemnaAdresa" required placeholder="Ulica i broj, Grad">
-            <label>Adresa odredišta:</label>
-            <input type="text" id="odredisteAdresa" required placeholder="Ulica i broj, Grad">
-            <label>Datum i vreme:</label>
-            <input type="datetime-local" id="datumVreme" required>
-            <label>Tip pacijenta:</label>
-            <select id="tipPacijenta">
-                <option value="Sedeći">Sedeći</option>
-                <option value="Ležeći">Ležeći</option>
-            </select>
-            <label>Infekcija:</label>
-            <select id="infekcija">
-                <option value="Ne">Ne</option>
-                <option value="Da">Da</option>
-            </select>
-            <label>Vozač / vozilo:</label>
-            <input type="text" id="vozac" placeholder="Ime vozača">
-            <label>Napomena:</label>
-            <textarea id="napomena" rows="2"></textarea>
-            <button type="submit">Kreiraj nalog</button>
-        </form>
+
+    <h2>Dispečerski Panel</h2>
+
+    <div class="form-card">
+        <h3>Dodaj novi nalog</h3>
+        <select id="vozilo">
+            <script>
+                for(let i=1; i<=10; i++) {
+                    document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
+                }
+            </script>
+        </select>
+        <input type="text" id="pacijent" placeholder="Ime pacijenta">
+        <input type="text" id="adresa" placeholder="Adresa preuzimanja / relacija">
+        <input type="text" id="napomena" placeholder="Napomena (opciono)">
+        <button onclick="dodajNalog()">Pošalji Vozaču</button>
     </div>
-    <div class="card">
-        <h2>📊 Pregled svih aktivnosti</h2>
-        <div id="listaNaloga">Učitavanje...</div>
-    </div>
+
+    <h3>Aktivni Nalozi Uživo</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Vozilo</th>
+                <th>Pacijent</th>
+                <th>Adresa</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="tabelaNaloga"></tbody>
+    </table>
+
+    <button class="btn-reset" onclick="resetujNoviDan()">Započni novi dan (Očisti sve naloge)</button>
+
     <script>
-        const form = document.getElementById('nalogForm');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const data = {
-                pacijent: document.getElementById('pacijent').value,
-                prijemnaAdresa: document.getElementById('prijemnaAdresa').value,
-                odredisteAdresa: document.getElementById('odredisteAdresa').value,
-                datumVreme: document.getElementById('datumVreme').value,
-                tipPacijenta: document.getElementById('tipPacijenta').value,
-                infekcija: document.getElementById('infekcija').value,
-                vozac: document.getElementById('vozac').value,
-                napomena: document.getElementById('napomena').value
-            };
-            await fetch('/api/nalozi', {
+        async function dodajNalog() {
+            const vozilo = document.getElementById('vozilo').value;
+            const pacijent = document.getElementById('pacijent').value;
+            const adresa = document.getElementById('adresa').value;
+            const napomena = document.getElementById('napomena').value;
+
+            if(!pacijent || !adresa) return alert('Popunite pacijenta i adresu!');
+
+            await fetch('/api/voznje', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify({ vozilo, pacijent, adresa, napomena })
             });
-            form.reset();
-            ucitajNaloge();
-        });
-        async function ucitajNaloge() {
-            const res = await fetch('/api/nalozi');
-            const nalozi = await res.json();
-            const container = document.getElementById('listaNaloga');
-            container.innerHTML = '';
-            nalozi.forEach(n => {
-                const lepoVreme = n.datumVreme ? n.datumVreme.replace('T', ' ') : '';
-                container.innerHTML += `
-                    <div class="nalog-item">
-                        <h3>#${n.id} Pacijent: ${n.pacijent} (${n.tipPacijenta})</h3>
-                        <p><strong>Preuzimanje:</strong> ${n.prijemnaAdresa} ➔ <strong>Odredište:</strong> ${n.odredisteAdresa}</p>
-                        <p><strong>Vreme:</strong> ${lepoVreme} | <strong>Vozač:</strong> ${n.vozac} \vert{} <strong>Infekcija:</strong>${n.infekcija}</p>
-                        <p><strong>Status:</strong> <span class="badge">${n.status}</span></p>
-                    </div>
+
+            document.getElementById('pacijent').value = '';
+            document.getElementById('adresa').value = '';
+            document.getElementById('napomena').value = '';
+            ucitaj();
+        }
+
+        async function ucitaj() {
+            const res = await fetch('/api/voznje');
+            const podaci = await res.json();
+            const tabela = document.getElementById('tabelaNaloga');
+            tabela.innerHTML = '';
+
+            podaci.forEach(v => {
+                tabela.innerHTML += `
+                    <tr>
+                        <td><b>${v.vozilo}</b></td>
+                        <td>${v.pacijent}</td>
+                        <td>${v.adresa}</td>
+                        <td><span style="color: blue; font-weight: bold;">${v.status}</span></td>
+                    </tr>
                 `;
             });
         }
-        setInterval(ucitajNaloge, 3000);
-        ucitajNaloge();
+
+        async function resetujNoviDan() {
+            if(confirm("Da li ste sigurni da želite da obrišete sve naloge i započnete novi dan?")) {
+                await fetch('/api/reset', { method: 'POST' });
+                ucitaj();
+            }
+        }
+
+        setInterval(ucitaj, 3000);
+        ucitaj();
     </script>
 </body>
 </html>
