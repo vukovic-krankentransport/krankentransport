@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krankenfahrdienst - Dispečer & Vozač</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
+        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, select, button, textarea { width: 100%; padding: 10px; margin: 5px 0 15px 0; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-nav { background-color: #17a2b8; text-decoration: none; display: inline-block; text-align: center; color: white; padding: 10px; border-radius: 4px; margin-right: 5px; margin-bottom: 10px; }
+        .nalog-item { border-left: 5px solid #007bff; padding: 15px; margin-bottom: 15px; background: #fafafa; border-radius: 4px; }
+        
+        .status-group { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+        .btn-status { width: auto; padding: 8px 12px; font-size: 13px; font-weight: bold; margin: 0; }
+        .st-1 { background-color: #ffc107; color: #212529; } 
+        .st-2 { background-color: #fd7e14; color: white; }   
+        .st-3 { background-color: #007bff; color: white; }   
+        .st-4 { background-color: #28a745; color: white; }   
+        .st-5 { background-color: #6c757d; color: white; }   
+        .active-status { outline: 3px solid #000; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Novi nalog za vožnju (Dispečer)</h2>
+        <form id="nalogForm">
+            <label>Pacijent:</label>
+            <input type="text" id="pacijent" required placeholder="Ime i prezime">
+            
+            <label>Adresa preuzimanja:</label>
+            <input type="text" id="prijemnaAdresa" required placeholder="Ulica i broj, Grad">
+            
+            <label>Adresa odredišta:</label>
+            <input type="text" id="odredisteAdresa" required placeholder="Ulica i broj, Grad">
+            
+            <label>Datum i vreme:</label>
+            <input type="datetime-local" id="datumVreme" required>
+            
+            <label>Tip pacijenta:</label>
+            <select id="tipPacijenta">
+                <option value="Sedeći">Sedeći</option>
+                <option value="Ležeći">Ležeći</option>
+            </select>
+
+            <label>Infekcija:</label>
+            <select id="infekcija">
+                <option value="Ne">Ne</option>
+                <option value="Da">Da</option>
+            </select>
+
+            <label>Vozač / vozilo:</label>
+            <input type="text" id="vozac" placeholder="Ime vozača">
+
+            <label>Napomena:</label>
+            <textarea id="napomena" rows="2"></textarea>
+
+            <button type="submit">Kreiraj nalog</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Lista naloga (Vozač)</h2>
+        <div id="listaNaloga">Učitavanje...</div>
+    </div>
+
+    <script>
+        const form = document.getElementById('nalogForm');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                pacijent: document.getElementById('pacijent').value,
+                prijemnaAdresa: document.getElementById('prijemnaAdresa').value,
+                odredisteAdresa: document.getElementById('odredisteAdresa').value,
+                datumVreme: document.getElementById('datumVreme').value,
+                tipPacijenta: document.getElementById('tipPacijenta').value,
+                infekcija: document.getElementById('infekcija').value,
+                vozac: document.getElementById('vozac').value,
+                napomena: document.getElementById('napomena').value
+            };
+
+            await fetch('/api/nalozi', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            form.reset();
+            ucitajNaloge();
+        });
+
+        async function promeniStatus(id, noviStatus) {
+            await fetch(`/api/nalozi/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: noviStatus })
+            });
+            ucitajNaloge();
+        }
+
+        async function ucitajNaloge() {
+            const res = await fetch('/api/nalozi');
+            const nalozi = await res.json();
+            const container = document.getElementById('listaNaloga');
+            container.innerHTML = '';
+
+            nalozi.forEach(n => {
+                const navStart = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(n.prijemnaAdresa)}`;
+                const navEnd = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(n.odredisteAdresa)}`;
+                const lepoVreme = n.datumVreme ? n.datumVreme.replace('T', ' ') : '';
+
+                container.innerHTML += `
+                    <div class="nalog-item">
+                        <h3>Pacijent: ${n.pacijent} (${n.tipPacijenta})</h3>
+                        <p><strong>Infekcija:</strong> ${n.infekcija}</p>
+                        <p><strong>Preuzimanje:</strong> ${n.prijemnaAdresa}</p>
+                        <p><strong>Odredište:</strong> ${n.odredisteAdresa}</p>
+                        <p><strong>Vreme:</strong> ${lepoVreme} | <strong>Vozač:</strong> ${n.vozac}</p>
+                        <p><strong>Napomena:</strong> ${n.napomena || '/'}</p>
+                        <p><strong>Trenutni status:</strong> <span style="background:#e2e8f0; padding:3px 8px; border-radius:4px; font-weight:bold;">${n.status}</span></p>
+                        
+                        <a href="${navStart}" target="_blank" class="btn-nav">📍 Navigacija do pacijenta</a>
+                        <a href="${navEnd}" target="_blank" class="btn-nav">🏁 Navigacija do cilja</a>
+                        
+                        <div class="status-group">
+                            <button class="btn-status st-1 ${n.status === 'Stigao na adresu' ? 'active-status' : ''}" onclick="promeniStatus(${n.id}, 'Stigao na adresu')">1. Stigao na adresu</button>
+                            <button class="btn-status st-2 ${n.status === 'Preuzeo pacijenta' ? 'active-status' : ''}" onclick="promeniStatus(${n.id}, 'Preuzeo pacijenta')">2. Preuzeo pacijenta</button>
+                            <button class="btn-status st-3 ${n.status === 'U transportu' ? 'active-status' : ''}" onclick="promeniStatus(${n.id}, 'U transportu')">3. U transportu</button>
+                            <button class="btn-status st-4 ${n.status === 'Odvezao do cilja' ? 'active-status' : ''}" onclick="promeniStatus(${n.id}, 'Odvezao do cilja')">4. Odvezao do cilja</button>
+                            <button class="btn-status st-5 ${n.status === 'Slobodan' ? 'active-status' : ''}" onclick="promeniStatus(${n.id}, 'Slobodan')">5. Slobodan</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        ucitajNaloge();
+    </script>
+</body>
+</html>

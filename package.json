@@ -1,0 +1,13 @@
+{
+  "name": "sanitetski-prevoz",
+  "version": "1.0.0",
+  "description": "Aplikacija za sanitetski prevoz",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
