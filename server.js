@@ -18,7 +18,11 @@ app.post('/api/voznje', (req, res) => {
         id: Date.now(),
         vozilo: req.body.vozilo,
         pacijent: req.body.pacijent,
-        adresa: req.body.adresa,
+        kasa: req.body.kasa,
+        vreme: req.body.vreme,
+        adresaPolazak: req.body.adresaPolazak,
+        adresaOdrediste: req.body.adresaOdrediste,
+        infekcija: req.body.infekcija,
         napomena: req.body.napomena || '',
         status: 'Dodijeljeno',
         datum: new Date().toLocaleDateString()
