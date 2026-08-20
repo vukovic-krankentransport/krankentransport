@@ -9,6 +9,8 @@
         .header { background: #b02a37; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 24px; }
         
+        .audio-alert { background: #ffc107; color: #000; text-align: center; padding: 10px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; cursor: pointer; border: 2px solid #e0a800; }
+
         .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
 
@@ -24,7 +26,10 @@
         th { background: #b02a37; color: white; }
         
         /* CHAT ZENTRALE */
-        .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 580px; display: flex; flex-direction: column; border: 2px solid #ccc; }
+        .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 580px; display: flex; flex-direction: column; border: 2px solid #ccc; transition: border-color 0.3s; }
+        .chat-card.nova-poruka { border-color: #dc3545; animation: blink 1s infinite; }
+        @keyframes blink { 0% { box-shadow: 0 0 10px #dc3545; } 50% { box-shadow: 0 0 0px #dc3545; } 100% { box-shadow: 0 0 10px #dc3545; } }
+
         .chat-box { flex-grow: 1; overflow-y: auto; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
         .chat-msg { padding: 8px 12px; border-radius: 6px; font-size: 13px; max-width: 85%; }
         .chat-msg.dispo { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
@@ -48,6 +53,10 @@
     <div class="header">
         <h1>VUKOVIC KRANKENTRANSPORTE</h1>
         <small>Disponenten-Steuerungssystem & Backup-Zentrale</small>
+    </div>
+
+    <div id="audioNotice" class="audio-alert" onclick="aktivirajAudio()">
+        🔊 KLIKNITE BILO GDE NA EKRAN DA BISTE AKTIVIRALI ZVUK ZA NOVE PORUKE!
     </div>
 
     <div class="tab-buttons">
@@ -122,7 +131,7 @@
                 </div>
             </div>
 
-            <!-- CHAT ZENTRALE DA NÂS -->
+            <!-- CHAT ZENTRALE -->
             <div class="chat-card" id="chatCard">
                 <div style="margin-bottom: 10px;">
                     <h3 style="margin:0;">💬 Live Chat (Heute)</h3>
@@ -203,12 +212,44 @@
 
         let aktivnoVoziloChat = "Fahrzeug 1";
         let neprocitanePoruke = {};
-        let trenutneHistorijeskeVoznje = [];
+        let ukupnoPorukaPre = 0;
         let audioCtx = null;
 
         function aktivirajAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            document.getElementById('audioNotice').style.display = 'none';
+        }
+
+        // ZVUČNI SIGNAL BIP-BIP (DVA PUTA)
+        function svirajZvukDispo() {
+            try {
+                aktivirajAudio();
+                if (!audioCtx) return;
+
+                const sada = audioCtx.currentTime;
+                // Dva zvučna signala (0.0s i 0.25s)
+                [0, 0.25].forEach((delay) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(1046.50, sada + delay); // Visoki C6 ton (Bip)
+                    
+                    gain.gain.setValueAtTime(0.8, sada + delay);
+                    gain.gain.exponentialRampToValueAtTime(0.01, sada + delay + 0.18);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(sada + delay);
+                    osc.stop(sada + delay + 0.18);
+                });
+            } catch(e) {}
         }
 
         function otvoriTab(tabName, evt) {
@@ -242,12 +283,14 @@
         function promeniChatVozilo(vName) {
             aktivnoVoziloChat = vName;
             neprocitanePoruke[vName] = false;
+            document.getElementById('chatCard').classList.remove('nova-poruka');
             kreirajteChatTabove();
             ucitajPoruke();
         }
 
         function oznaciProcitanoDispo() {
             neprocitanePoruke[aktivnoVoziloChat] = false;
+            document.getElementById('chatCard').classList.remove('nova-poruka');
             kreirajteChatTabove();
         }
 
@@ -301,57 +344,21 @@
             ucitajPoruke();
         }
 
-        async function ucitajHistoriju() {
-            const datum = document.getElementById('filterDatum').value;
-            const vozilo = document.getElementById('filterVozilo').value;
-            try {
-                const res = await fetch(`/api/historija?datum=${datum}&vozilo=${vozilo}`);
-                const data = await res.json();
-                
-                trenutneHistorijeskeVoznje = data.voznje;
-
-                // Tabela vožnji
-                const tabela = document.getElementById('tabelaHistorija');
-                tabela.innerHTML = '';
-                data.voznje.forEach(v => {
-                    tabela.innerHTML += `
-                        <tr>
-                            <td><b>#${v.id}</b></td>
-                            <td>${v.datum}</td>
-                            <td>${v.vreme || '-'}</td>
-                            <td><b>${v.vozilo}</b></td>
-                            <td>${v.pacijent}</td>
-                            <td>${v.adresaPolazak} -> ${v.adresaOdrediste || '-'}</td>
-                            <td>${v.status}</td>
-                        </tr>
-                    `;
-                });
-
-                // Arhiva chata za taj dan
-                const chatBox = document.getElementById('chatArchiveBox');
-                chatBox.innerHTML = '';
-                if(data.poruke.length === 0) {
-                    chatBox.innerHTML = '<small style="color:#777; text-align:center;">Keine Nachrichten für diesen Tag/Fahrzeug.</small>';
-                } else {
-                    data.poruke.forEach(p => {
-                        const isDispo = p.posiljalac === 'Zentrale';
-                        const msgClass = isDispo ? 'chat-msg dispo' : 'chat-msg fahrer';
-                        chatBox.innerHTML += `
-                            <div class="${msgClass}">
-                                <small style="color:#666;">[${p.vreme}] ${p.vozilo}</small><br>
-                                <b>${p.posiljalac}:</b> ${p.tekst}
-                            </div>
-                        `;
-                    });
-                }
-
-            } catch(e) {}
-        }
-
         async function ucitajPoruke() {
             try {
                 const res = await fetch('/api/poruke');
                 const poruke = await res.json();
+
+                // Provera za zvučni signal kada stigne NOVA poruka od bilo kog vozača
+                if (ukupnoPorukaPre > 0 && poruke.length > ukupnoPorukaPre) {
+                    const poslednja = poruke[poruke.length - 1];
+                    if (poslednja.posiljalac !== 'Zentrale') {
+                        svirajZvukDispo(); // Sviraj BIP-BIP!
+                        document.getElementById('chatCard').classList.add('nova-poruka');
+                    }
+                }
+                ukupnoPorukaPre = poruke.length;
+
                 const box = document.getElementById('chatBoxDispo');
                 box.innerHTML = '';
 
@@ -378,6 +385,7 @@
         }
 
         async function posaljiPorukuDispo() {
+            aktivirajAudio();
             const input = document.getElementById('chatInputDispo');
             const tekst = input.value.trim();
 
