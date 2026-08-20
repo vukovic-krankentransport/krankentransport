@@ -3,71 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fahrer App - Vukovic</title>
+    <title>Vuković Krankentransporte App</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 15px; background: #f4f6f9; margin: 0; }
-        .header { background: #0d6efd; color: white; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        select, input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
-        button { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; }
+        body { font-family: Arial, sans-serif; background: #dcdcd3; margin: 0; padding: 10px; color: #000; }
         
-        /* CHAT STYLE */
-        .chat-card { border: 2px solid #ccc; transition: border-color 0.3s; }
-        .chat-card.nova-poruka { border-color: #dc3545; animation: blink 1s infinite; }
+        /* GORNJA TRAKA */
+        .app-title { background: #b02a37; color: white; text-align: center; padding: 8px; font-weight: bold; font-size: 16px; border-radius: 6px; margin-bottom: 10px; }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #e6e6de; padding: 6px 12px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #ccc; }
+        .vehicle-select { font-weight: bold; font-size: 14px; padding: 6px; border-radius: 4px; border: 1px solid #aaa; }
+        .btn-status-top { background: #4a90e2; color: white; border: none; padding: 8px 16px; font-weight: bold; font-size: 14px; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        /* KARTICA NALOGA - IDENTIČNA KAO SA SLIKE */
+        .einsatz-card { background: #ecece3; border: 1px solid #bbb; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .row { display: flex; margin-bottom: 10px; align-items: flex-start; }
+        .label { width: 100px; font-weight: bold; color: #55547e; flex-shrink: 0; font-size: 15px; }
+        .value { color: #0000aa; font-weight: bold; flex-grow: 1; word-break: break-word; font-size: 16px; }
+        .value-text { color: #000; font-weight: normal; }
+
+        .nav-btn-group { display: flex; flex-direction: column; gap: 4px; margin-left: 10px; flex-shrink: 0; }
+        .btn-nav { background: #d0d0c8; border: 1px solid #999; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: bold; color: #333; text-decoration: none; text-align: center; }
+
+        /* CHAT ZONA */
+        .chat-section { background: white; border-radius: 8px; padding: 12px; border: 2px solid #ccc; margin-top: 15px; transition: border-color 0.3s; }
+        .chat-section.nova-poruka { border-color: #dc3545; animation: blink 1s infinite; }
         @keyframes blink { 0% { box-shadow: 0 0 10px #dc3545; } 50% { box-shadow: 0 0 0px #dc3545; } 100% { box-shadow: 0 0 10px #dc3545; } }
         
-        .chat-box { height: 250px; overflow-y: auto; background: #eef2f5; border: 1px solid #ddd; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
-        .chat-msg { padding: 8px 12px; border-radius: 6px; font-size: 14px; max-width: 80%; word-break: break-word; }
-        .chat-msg.zentrale { background: #fff3cd; align-self: flex-start; border: 1px solid #ffecb5; }
-        .chat-msg.self { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
-        
-        .badge { background: #dc3545; color: white; padding: 2px 6px; border-radius: 10px; font-size: 12px; display: none; }
-        .order-card { background: white; border-left: 5px solid #0d6efd; padding: 10px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chat-header { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 4px; display: flex; justify-content: space-between; }
+        .chat-box { height: 140px; overflow-y: auto; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .chat-msg { background: #e1f5fe; padding: 6px 10px; border-radius: 6px; max-width: 85%; font-size: 13px; }
+        .chat-msg.self { background: #e8f5e9; align-self: flex-end; }
+        .chat-msg.zentrale { background: #fff3cd; border: 1px solid #ffecb5; align-self: flex-start; }
+        .chat-input-group { display: flex; gap: 6px; }
+        .chat-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .btn-send { background: #198754; color: white; border: none; padding: 10px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body onclick="aktivirajAudio()">
 
-    <div class="header">
-        <h2 style="margin:0;">🚗 Fahrer App</h2>
+    <div class="app-title">Vuković Krankentransporte App</div>
+
+    <div class="top-bar">
+        <div>
+            <select id="voziloSelect" class="vehicle-select" onchange="promenaVozila()">
+                <option value="">-- Fahrzeug wählen --</option>
+                <option value="Fahrzeug 1">Fahrzeug 1</option>
+                <option value="Fahrzeug 2">Fahrzeug 2</option>
+                <option value="Fahrzeug 3">Fahrzeug 3</option>
+                <option value="Fahrzeug 4">Fahrzeug 4</option>
+                <option value="Fahrzeug 5">Fahrzeug 5</option>
+                <option value="Fahrzeug 6">Fahrzeug 6</option>
+                <option value="Fahrzeug 7">Fahrzeug 7</option>
+                <option value="Fahrzeug 8">Fahrzeug 8</option>
+                <option value="Fahrzeug 9">Fahrzeug 9</option>
+                <option value="Fahrzeug 10">Fahrzeug 10</option>
+            </select>
+        </div>
+        <div id="statusBtnContainer"></div>
     </div>
 
-    <!-- IZBOR VOZILA -->
-    <div class="card">
-        <label><b>Wählen Sie Ihr Fahrzeug:</b></label>
-        <select id="izborVozila" onchange="sacuvajVozilo()">
-            <option value="">-- Fahrzeug wählen --</option>
-            <option value="Fahrzeug 1">Fahrzeug 1</option>
-            <option value="Fahrzeug 2">Fahrzeug 2</option>
-            <option value="Fahrzeug 3">Fahrzeug 3</option>
-            <option value="Fahrzeug 4">Fahrzeug 4</option>
-            <option value="Fahrzeug 5">Fahrzeug 5</option>
-            <option value="Fahrzeug 6">Fahrzeug 6</option>
-            <option value="Fahrzeug 7">Fahrzeug 7</option>
-            <option value="Fahrzeug 8">Fahrzeug 8</option>
-            <option value="Fahrzeug 9">Fahrzeug 9</option>
-            <option value="Fahrzeug 10">Fahrzeug 10</option>
-        </select>
-    </div>
+    <div id="voznjeKontejner"></div>
 
-    <!-- NALOZI -->
-    <div class="card">
-        <h3>Meine Aufträge</h3>
-        <div id="listaNaloga">Wählen Sie ein Fahrzeug...</div>
-    </div>
-
-    <!-- CHAT VOZAČ -->
-    <div class="card chat-card" id="chatCardVozac" onclick="oznaciProcitanoVozac()">
-        <h3>💬 Chat mit Zentrale <span id="vozacBadge" class="badge">NEU!</span></h3>
+    <div class="chat-section" id="chatCardVozac" onclick="oznaciProcitanoVozac()">
+        <div class="chat-header">
+            <span>💬 Mitteilung an Zentrale (Dispo)</span>
+            <span id="vozacBadge" style="color:red; display:none; font-weight:bold;">! NEUE NACHRICHT</span>
+        </div>
         <div id="chatBox" class="chat-box"></div>
-        <input type="text" id="chatInput" placeholder="Nachricht an Zentrale..." onkeypress="if(event.key==='Enter') posaljiPorukuVozac()">
-        <button onclick="posaljiPorukuVozac()">Senden</button>
+        <div class="chat-input-group">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Nachricht schreiben..." onkeypress="if(event.key==='Enter') posaljiPoruku()">
+            <button class="btn-send" onclick="posaljiPoruku()">Senden</button>
+        </div>
     </div>
 
     <script>
+        const STATUS_STAGES = [
+            { code: 1, statusText: "Angenommen" },
+            { code: 2, statusText: "An der Adresse" },
+            { code: 3, statusText: "Patient im Fahrzeug" },
+            { code: 4, statusText: "Patient übergeben" },
+            { code: 5, statusText: "Erledigt" }
+        ];
+
         let poslednjiBrojPorukaVozac = 0;
         let audioCtx = null;
 
-        // Inicijalizacija tona na dodir ekrana
         function aktivirajAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -77,7 +97,6 @@
             }
         }
 
-        // Trostruki glasan BEEP signal
         function svirajZvuk() {
             try {
                 aktivirajAudio();
@@ -89,7 +108,7 @@
                     const gain = audioCtx.createGain();
                     
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(987.77, sada + delay); // Visoki tone (B5)
+                    osc.frequency.setValueAtTime(987.77, sada + delay);
                     
                     gain.gain.setValueAtTime(0.6, sada + delay);
                     gain.gain.exponentialRampToValueAtTime(0.01, sada + delay + 0.15);
@@ -103,10 +122,15 @@
             } catch(e) {}
         }
 
-        function sacuvajVozilo() {
-            const v = document.getElementById('izborVozila').value;
-            localStorage.setItem('izabranoVozilo', v);
+        if(localStorage.getItem('izabranoVozilo')) {
+            document.getElementById('voziloSelect').value = localStorage.getItem('izabranoVozilo');
+        }
+
+        function promenaVozila() {
+            const val = document.getElementById('voziloSelect').value;
+            localStorage.setItem('izabranoVozilo', val);
             ucitajVoznje();
+            ucitajPoruke();
         }
 
         function oznaciProcitanoVozac() {
@@ -116,32 +140,90 @@
 
         async function ucitajVoznje() {
             const mojeVozilo = localStorage.getItem('izabranoVozilo');
-            if(!mojeVozilo) return;
+            const kontejner = document.getElementById('voznjeKontejner');
+            const btnContainer = document.getElementById('statusBtnContainer');
+
+            if(!mojeVozilo) {
+                kontejner.innerHTML = '<div class="einsatz-card"><p>Bitte wählen Sie oben Ihr Fahrzeug aus.</p></div>';
+                btnContainer.innerHTML = '';
+                return;
+            }
 
             try {
                 const res = await fetch('/api/voznje');
-                const sveVoznje = await res.json();
-                const mojeeVoznje = sveVoznje.filter(v => v.vozilo === mojeVozilo);
+                const podaci = await res.json();
+                const mojeVoznje = podaci.filter(v => v.vozilo === mojeVozilo && v.status !== 'Erledigt');
 
-                const container = document.getElementById('listaNaloga');
-                if(mojeeVoznje.length === 0) {
-                    container.innerHTML = '<p>Keine aktiven Aufträge.</p>';
-                } else {
-                    container.innerHTML = '';
-                    mojeeVoznje.forEach(v => {
-                        container.innerHTML += `
-                            <div class="order-card">
-                                <b>Zeit:</b> ${v.vreme || '-'} | <b>Patient:</b> ${v.pacijent}<br>
-                                <b>Von:</b> ${v.adresaPolazak}<br>
-                                <b>Nach:</b> ${v.adresaOdrediste || '-'}<br>
-                                <b>Art:</b> ${v.tipTransporta || 'Sitzend'} | <b>Infektion:</b> ${v.infekcija || 'NEIN'}<br>
-                                <small>Hinweis: ${v.napomena || '-'}</small>
-                            </div>
-                        `;
-                    });
+                if(mojeVoznje.length === 0) {
+                    kontejner.innerHTML = '<div class="einsatz-card"><p>Kein aktiver Einsatz für dieses Fahrzeug.</p></div>';
+                    btnContainer.innerHTML = '<button class="btn-status-top" disabled>Kein Einsatz</button>';
+                    return;
                 }
-            } catch(err) {}
-            ucitajPoruke();
+
+                const tv = mojeVoznje[0];
+                renderStatusButton(tv);
+
+                const gMapsPolazak = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tv.adresaPolazak)}`;
+                const appleMapsPolazak = `http://maps.apple.com/?q=${encodeURIComponent(tv.adresaPolazak)}`;
+                
+                const gMapsOdrediste = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tv.adresaOdrediste)}`;
+                const appleMapsOdrediste = `http://maps.apple.com/?q=${encodeURIComponent(tv.adresaOdrediste)}`;
+
+                kontejner.innerHTML = `
+                    <div class="einsatz-card">
+                        <div class="row"><div class="label">Art</div><div class="value">${tv.tipTransporta || '1'}</div></div>
+                        <div class="row"><div class="label">Überm.</div><div class="value">${tv.datum} ${tv.vreme || '00:00'} Uhr</div></div>
+                        <div class="row"><div class="label">Nr.</div><div class="value">${tv.id}</div></div>
+                        <div class="row"><div class="label">Datum</div><div class="value">${tv.datum}</div></div>
+                        <div class="row"><div class="label">Zeit</div><div class="value">${tv.vreme || '00:00'}</div></div>
+                        <div class="row"><div class="label">Prio</div><div class="value-text">${tv.infekcija === 'JA' ? '🔴 INFEKTION' : ''}</div></div>
+                        <div class="row"><div class="label">Name</div><div class="value">${tv.pacijent}</div></div>
+                        <div class="row"><div class="label">Geburt</div><div class="value-text">k.A.</div></div>
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="label">Von</div>
+                            <div class="value">${tv.adresaPolazak}</div>
+                            <div class="nav-btn-group">
+                                <a href="${gMapsPolazak}" target="_blank" class="btn-nav">NAV</a>
+                                <a href="${appleMapsPolazak}" target="_blank" class="btn-nav">Apple Maps</a>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="label">Nach</div>
+                            <div class="value">${tv.adresaOdrediste || '-'}</div>
+                            <div class="nav-btn-group">
+                                ${tv.adresaOdrediste ? `<a href="${gMapsOdrediste}" target="_blank" class="btn-nav">NAV</a><a href="${appleMapsOdrediste}" target="_blank" class="btn-nav">Apple Maps</a>` : ''}
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 10px;"><div class="label">Grund</div><div class="value">${tv.napomena || 'Krankentransport'}</div></div>
+                        <div class="row"><div class="label">L/S</div><div class="value">---</div></div>
+                        <div class="row"><div class="label">Med.Ger.</div><div class="value-text"></div></div>
+                        <div class="row"><div class="label">Komm.</div><div class="value-text"></div></div>
+                        <div class="row"><div class="label">Kr.kasse</div><div class="value-text">${tv.kasa || '-'}</div></div>
+                    </div>
+                `;
+            } catch (err) {}
+        }
+
+        function renderStatusButton(voznja) {
+            const btnContainer = document.getElementById('statusBtnContainer');
+            let currentIndex = STATUS_STAGES.findIndex(s => s.statusText === voznja.status);
+            let nextIndex = currentIndex === -1 ? 0 : currentIndex + 1;
+
+            if (nextIndex < STATUS_STAGES.length) {
+                const nextStage = STATUS_STAGES[nextIndex];
+                btnContainer.innerHTML = `<button class="btn-status-top" onclick="promeniStatus(${voznja.id}, '${nextStage.statusText}')">${nextStage.code} Status</button>`;
+            } else {
+                btnContainer.innerHTML = `<button class="btn-status-top" style="background:#28a745;">Erledigt</button>`;
+            }
+        }
+
+        async function promeniStatus(id, noviStatus) {
+            await fetch('/api/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: noviStatus })
+            });
+            ucitajVoznje();
         }
 
         async function ucitajPoruke() {
@@ -151,24 +233,20 @@
             try {
                 const res = await fetch('/api/poruke');
                 const poruke = await res.json();
-                
-                // Filtriraj poruke namenjene ovom vozilu ili svima
-                const mojePoruke = poruke.filter(p => p.vozilo === mojeVozilo || p.vozilo === 'Alle Fahrzeuge' || p.posiljalac === mojeVozilo);
-                
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
 
-                if (poslednjiBrojPorukaVozac > 0 && mojePoruke.length > poslednjiBrojPorukaVozac) {
-                    const poslednja = mojePoruke[mojePoruke.length - 1];
+                if (poslednjiBrojPorukaVozac > 0 && poruke.length > poslednjiBrojPorukaVozac) {
+                    const poslednja = poruke[poruke.length - 1];
                     if(poslednja.posiljalac === 'Zentrale') {
                         svirajZvuk();
                         document.getElementById('chatCardVozac').classList.add('nova-poruka');
                         document.getElementById('vozacBadge').style.display = 'inline';
                     }
                 }
-                poslednjiBrojPorukaVozac = mojePoruke.length;
+                poslednjiBrojPorukaVozac = poruke.length;
 
-                mojePoruke.forEach(p => {
+                poruke.forEach(p => {
                     const isDispo = p.posiljalac === 'Zentrale';
                     const msgClass = isDispo ? 'chat-msg zentrale' : 'chat-msg self';
                     box.innerHTML += `
@@ -181,33 +259,28 @@
             } catch (err) {}
         }
 
-        async function posaljiPorukuVozac() {
-            const mojeVozilo = localStorage.getItem('izabranoVozilo');
+        async function posaljiPoruku() {
             const input = document.getElementById('chatInput');
             const tekst = input.value.trim();
+            const mojeVozilo = localStorage.getItem('izabranoVozilo') || 'Fahrzeug 1';
 
-            if(!mojeVozilo) return alert('Bitte zuerst Fahrzeug auswählen!');
             if(!tekst) return;
 
             await fetch('/api/poruke', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ posiljalac: mojeVozilo, vozilo: 'Zentrale', tekst })
+                body: JSON.stringify({ posiljalac: mojeVozilo, vozilo: mojeVozilo, tekst })
             });
 
             input.value = '';
             ucitajPoruke();
         }
 
-        // Auto-učitavanje sačuvanog vozila
-        window.onload = () => {
-            const sacuvano = localStorage.getItem('izabranoVozilo');
-            if(sacuvano) {
-                document.getElementById('izborVozila').value = sacuvano;
-            }
-            ucitajVoznje();
-            setInterval(ucitajVoznje, 3000);
-        };
+        setInterval(ucitajVoznje, 5000);
+        setInterval(ucitajPoruke, 3000);
+
+        ucitajVoznje();
+        ucitajPoruke();
     </script>
 </body>
 </html>
