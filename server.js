@@ -25,13 +25,11 @@ function saveData(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// Get sve vožnje
 app.get('/api/voznje', (req, res) => {
     const data = readData();
     res.json(data.voznje || []);
 });
 
-// Dodaj ili izmeni vožnju
 app.post('/api/voznje', (req, res) => {
     const data = readData();
     if (!data.voznje) data.voznje = [];
@@ -54,7 +52,6 @@ app.post('/api/voznje', (req, res) => {
     res.json({ success: true, voznja: novaVoznja });
 });
 
-// Promena statusa
 app.post('/api/status', (req, res) => {
     const { id, status } = req.body;
     const data = readData();
@@ -70,7 +67,6 @@ app.post('/api/status', (req, res) => {
     }
 });
 
-// Poruke
 app.get('/api/poruke', (req, res) => {
     const data = readData();
     res.json(data.poruke || []);
