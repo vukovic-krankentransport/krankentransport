@@ -23,7 +23,7 @@
         th { background: #b02a37; color: white; }
         
         /* CHAT ZENTRALE */
-        .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 550px; display: flex; flex-direction: column; border: 2px solid #ccc; transition: border-color 0.3s; }
+        .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 580px; display: flex; flex-direction: column; border: 2px solid #ccc; transition: border-color 0.3s; }
         .chat-card.nova-poruka { border-color: #dc3545; animation: blink-border 1s infinite; }
         
         @keyframes blink-border {
@@ -43,10 +43,11 @@
         .tab-buttons { margin-bottom: 15px; }
         .tab-btn { width: auto; padding: 10px 20px; margin-right: 5px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; position: relative; }
         .tab-btn.active { background: #b02a37; }
-        .tab-btn.has-unread { background: #dc3545 !important; }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        .btn-tab-v { width: auto; padding: 6px 12px; margin: 0; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; }
     </style>
 </head>
 <body onclick="aktivirajAudio()">
@@ -57,9 +58,7 @@
     </div>
 
     <div class="tab-buttons">
-        <button id="tabLiveBtn" class="tab-btn active" onclick="otvoriTab('radnaTabla', event)">
-            📋 Live-Aufträge & Chat <span id="tabBadge" class="badge-poruke">!</span>
-        </button>
+        <button id="tabLiveBtn" class="tab-btn active" onclick="otvoriTab('radnaTabla', event)">📋 Live-Aufträge & Chat</button>
         <button class="tab-btn" onclick="otvoriTab('historijaTab', event)">📂 Archiv & Fahrtenbuch</button>
     </div>
 
@@ -130,32 +129,20 @@
                 <button class="btn-reset" onclick="resetujNoviDan()">Neuen Tag starten</button>
             </div>
 
-            <!-- CHAT ZENTRALE -->
+            <!-- CHAT ZENTRALE SA PRIVATNIM KANALIMA ZA SVAKO VOZILO -->
             <div class="chat-card" id="chatCard">
                 <div class="chat-header-title">
-                    <h3 style="margin:0;">💬 Nachrichten-Zentrale</h3>
-                    <span id="chatBadge" class="badge-poruke">NEUE NACHRICHT!</span>
+                    <h3 style="margin:0;">💬 Privatni Chat po Vozilu</h3>
                 </div>
 
-                <div id="chatBoxDispo" class="chat-box" onclick="oznaciProcitano()"></div>
-                
-                <label><b>Empfänger (Fahrzeug):</b></label>
-                <select id="chatVoziloSelect">
-                    <option value="Alle Fahrzeuge">Alle Fahrzeuge (Broadcast)</option>
-                    <option value="Fahrzeug 1">Fahrzeug 1</option>
-                    <option value="Fahrzeug 2">Fahrzeug 2</option>
-                    <option value="Fahrzeug 3">Fahrzeug 3</option>
-                    <option value="Fahrzeug 4">Fahrzeug 4</option>
-                    <option value="Fahrzeug 5">Fahrzeug 5</option>
-                    <option value="Fahrzeug 6">Fahrzeug 6</option>
-                    <option value="Fahrzeug 7">Fahrzeug 7</option>
-                    <option value="Fahrzeug 8">Fahrzeug 8</option>
-                    <option value="Fahrzeug 9">Fahrzeug 9</option>
-                    <option value="Fahrzeug 10">Fahrzeug 10</option>
-                </select>
+                <div style="display:flex; gap:4px; overflow-x:auto; padding-bottom:8px; margin-bottom:5px;" id="chatVozilaTabs"></div>
 
-                <input type="text" id="chatInputDispo" placeholder="Nachricht an Fahrer..." onkeypress="if(event.key==='Enter') posaljiPorukuDispo()">
-                <button class="btn-submit" style="margin-top:5px;" onclick="posaljiPorukuDispo()">Senden</button>
+                <div id="chatBoxDispo" class="chat-box" onclick="oznaciProcitanoDispo()"></div>
+                
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="chatInputDispo" placeholder="Poruka za izabrano vozilo..." onkeypress="if(event.key==='Enter') posaljiPorukuDispo()">
+                    <button class="btn-submit" style="margin:0; width:100px;" onclick="posaljiPorukuDispo()">Senden</button>
+                </div>
             </div>
         </div>
     </div>
@@ -198,7 +185,8 @@
         document.getElementById('datum').value = danasnjiDatum;
         document.getElementById('filterDatum').value = danasnjiDatum;
 
-        let poslednjiBrojPoruka = 0;
+        let aktivnoVoziloChat = "Fahrzeug 1";
+        let neprocitanePoruke = {};
         let audioCtx = null;
 
         function aktivirajAudio() {
@@ -232,7 +220,7 @@
                     osc.start(sada + delay);
                     osc.stop(sada + delay + 0.15);
                 });
-            } catch(e) { console.log("Zvuk blokiran", e); }
+            } catch(e) {}
         }
 
         function otvoriTab(tabName, evt) {
@@ -241,18 +229,38 @@
             document.getElementById(tabName).classList.add('active');
             if(evt && evt.currentTarget) evt.currentTarget.classList.add('active');
             
-            if(tabName === 'radnaTabla') {
-                oznaciProcitano();
-            } else if(tabName === 'historijaTab') {
+            if(tabName === 'historijaTab') {
                 ucitajHistoriju();
             }
         }
 
-        function oznaciProcitano() {
-            document.getElementById('chatCard').classList.remove('nova-poruka');
-            document.getElementById('tabLiveBtn').classList.remove('has-unread');
-            document.getElementById('chatBadge').style.display = 'none';
-            document.getElementById('tabBadge').style.display = 'none';
+        function kreirajteChatTabove() {
+            const tabsContainer = document.getElementById('chatVozilaTabs');
+            tabsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 10; i++) {
+                const vName = `Fahrzeug ${i}`;
+                const isActive = vName === aktivnoVoziloChat ? 'background:#b02a37; color:white;' : 'background:#e0e0e0; color:#333;';
+                const hasBadge = neprocitanePoruke[vName] ? '🔴 ' : '';
+                
+                tabsContainer.innerHTML += `
+                    <button class="btn-tab-v" onclick="promeniChatVozilo('${vName}')" style="${isActive}">
+                        ${hasBadge}F${i}
+                    </button>
+                `;
+            }
+        }
+
+        function promeniChatVozilo(vName) {
+            aktivnoVoziloChat = vName;
+            neprocitanePoruke[vName] = false;
+            kreirajteChatTabove();
+            ucitajPoruke();
+        }
+
+        function oznaciProcitanoDispo() {
+            neprocitanePoruke[aktivnoVoziloChat] = false;
+            kreirajteChatTabove();
         }
 
         async function dodajNalog() {
@@ -336,19 +344,16 @@
                 const box = document.getElementById('chatBoxDispo');
                 box.innerHTML = '';
 
-                if (poslednjiBrojPoruka > 0 && poruke.length > poslednjiBrojPoruka) {
-                    const poslednjaPoruka = poruke[poruke.length - 1];
-                    if(poslednjaPoruka.posiljalac !== 'Zentrale') {
-                        svirajZvuk();
-                        document.getElementById('chatCard').classList.add('nova-poruka');
-                        document.getElementById('tabLiveBtn').classList.add('has-unread');
-                        document.getElementById('chatBadge').style.display = 'inline-block';
-                        document.getElementById('tabBadge').style.display = 'inline-block';
-                    }
-                }
-                poslednjiBrojPoruka = poruke.length;
+                const filtriranePoruke = poruke.filter(p => p.vozilo === aktivnoVoziloChat);
 
                 poruke.forEach(p => {
+                    if (p.posiljalac !== 'Zentrale' && p.vozilo !== aktivnoVoziloChat) {
+                        neprocitanePoruke[p.vozilo] = true;
+                    }
+                });
+                kreirajteChatTabove();
+
+                filtriranePoruke.forEach(p => {
                     const isDispo = p.posiljalac === 'Zentrale';
                     const msgClass = isDispo ? 'chat-msg dispo' : 'chat-msg fahrer';
                     box.innerHTML += `
@@ -364,14 +369,13 @@
         async function posaljiPorukuDispo() {
             const input = document.getElementById('chatInputDispo');
             const tekst = input.value.trim();
-            const vozilo = document.getElementById('chatVoziloSelect').value;
 
             if(!tekst) return;
 
             await fetch('/api/poruke', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ posiljalac: 'Zentrale', vozilo, tekst })
+                body: JSON.stringify({ posiljalac: 'Zentrale', vozilo: aktivnoVoziloChat, tekst })
             });
 
             input.value = '';
@@ -385,6 +389,7 @@
             }
         }
 
+        kreirajteChatTabove();
         setInterval(ucitaj, 3000);
         ucitaj();
     </script>
