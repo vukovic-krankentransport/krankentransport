@@ -1,118 +1,120 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dispečer Panel - Krankentransport</title>
+    <title>Vukovic Krankentransporte - Disponenten-Panel</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background: #eef2f5; margin: 0; }
+        .header { background: #b02a37; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; }
         .form-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
         input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
-        button.btn-submit { background: #28a745; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        button.btn-submit { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; }
         .btn-reset { background: #dc3545; color: white; border: none; font-weight: bold; cursor: pointer; padding: 12px; margin-top: 20px; border-radius: 6px; }
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-top: 15px; font-size: 14px; }
         th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background: #007bff; color: white; }
-        .badge-infekcija { background: #dc3545; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        th { background: #b02a37; color: white; }
+        .badge-infektion { background: #dc3545; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
         .badge-transport { background: #6c757d; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
-        .badge-lezeci { background: #fd7e14; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
-
-        /* Tabovi */
+        .badge-liegend { background: #fd7e14; color: white; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        
         .tab-buttons { margin-bottom: 15px; }
         .tab-btn { width: auto; padding: 10px 20px; margin-right: 5px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .tab-btn.active { background: #007bff; }
+        .tab-btn.active { background: #b02a37; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
-    <h2>Dispečerski Panel - Krankentransport</h2>
-
-    <!-- TAB DUGMAD -->
-    <div class="tab-buttons">
-        <button class="tab-btn active" onclick="otvoriTab('radnaTabla')">📋 Radna Tabla (Uživo)</button>
-        <button class="tab-btn" onclick="otvoriTab('historijaTab')">📂 Arhiva & Istorija Vožnji</button>
+    <div class="header">
+        <h1>VUKOVIC KRANKENTRANSPORTE</h1>
+        <small>Disponenten-Steuerungssystem</small>
     </div>
 
-    <!-- TAB 1: RADNA TABLA (UŽIVO) -->
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="otvoriTab('radnaTabla')">📋 Live-Aufträge</button>
+        <button class="tab-btn" onclick="otvoriTab('historijaTab')">📂 Archiv & Fahrtenbuch</button>
+    </div>
+
     <div id="radnaTabla" class="tab-content active">
         <div class="form-card">
-            <h3>Unos novog naloga</h3>
+            <h3>Neuen Transportauftrag erstellen</h3>
             <div class="grid-form">
                 <div>
-                    <label><b>Dodeljeno vozilo:</b></label>
+                    <label><b>Fahrzeugzuweisung:</b></label>
                     <select id="vozilo">
                         <script>
                             for(let i=1; i<=10; i++) {
-                                document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
+                                document.write(`<option value="Fahrzeug ${i}">Fahrzeug ${i}</option>`);
                             }
                         </script>
                     </select>
                 </div>
                 <div>
-                    <label><b>Ime i prezime pacijenta:</b></label>
-                    <input type="text" id="pacijent" placeholder="Ime i Prezime">
+                    <label><b>Patientenname:</b></label>
+                    <input type="text" id="pacijent" placeholder="Vor- und Nachname">
                 </div>
                 <div>
-                    <label><b>Kranckenkasse / Osiguranje:</b></label>
-                    <input type="text" id="kasa" placeholder="Npr. AOK, Barmer...">
+                    <label><b>Krankenkasse:</b></label>
+                    <input type="text" id="kasa" placeholder="z.B. AOK, Barmer, Techniker">
                 </div>
                 <div>
                     <label><b>Datum:</b></label>
                     <input type="date" id="datum">
                 </div>
                 <div>
-                    <label><b>Vreme preuzimanja:</b></label>
+                    <label><b>Abholzeit:</b></label>
                     <input type="time" id="vreme">
                 </div>
                 <div>
-                    <label><b>Tip transporta:</b></label>
+                    <label><b>Transportart:</b></label>
                     <select id="tipTransporta">
-                        <option value="Sedeći">🚶 Sedeći (Sitzend)</option>
-                        <option value="Ležeći">🛏️ Ležeći (Liegend)</option>
+                        <option value="Sitzend">🚶 Sitzend</option>
+                        <option value="Liegend">🛏️ Liegend</option>
                     </select>
                 </div>
                 <div>
-                    <label><b>Adresa preuzimanja (Polazak):</b></label>
-                    <input type="text" id="adresaPolazak" placeholder="Ulica, broj, grad">
+                    <label><b>Abholadresse (Start):</b></label>
+                    <input type="text" id="adresaPolazak" placeholder="Straße, Nr., PLZ, Ort">
                 </div>
                 <div>
-                    <label><b>Odredište (Gde se vozi):</b></label>
-                    <input type="text" id="adresaOdrediste" placeholder="Klinika / Ulica">
+                    <label><b>Zieladresse (Ziel):</b></label>
+                    <input type="text" id="adresaOdrediste" placeholder="Klinik / Adresse">
                 </div>
                 <div>
-                    <label><b>Infektivni pacijent:</b></label>
+                    <label><b>Infektionsfahrt:</b></label>
                     <select id="infekcija">
-                        <option value="NE">NE</option>
-                        <option value="DA">DA (Infektioos)</option>
+                        <option value="NEIN">NEIN</option>
+                        <option value="JA">JA (Infektiös)</option>
                     </select>
                 </div>
                 <div>
-                    <label><b>Napomena za vozača:</b></label>
-                    <input type="text" id="napomena" placeholder="Kolica, ležeći, sprat...">
+                    <label><b>Hinweis / Anmerkung:</b></label>
+                    <input type="text" id="napomena" placeholder="Rollstuhl, Etage, Tragestuhl...">
                 </div>
             </div>
-            <button class="btn-submit" onclick="dodajNalog()">Pošalji Vozaču</button>
+            <button class="btn-submit" onclick="dodajNalog()">Auftrag an Fahrer senden</button>
         </div>
 
-        <h3>Aktivni Nalozi Uživo</h3>
+        <h3>Aktive Transportaufträge</h3>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Nalog br.</th>
+                        <th>Auftrags-Nr.</th>
                         <th>Datum</th>
-                        <th>Vreme</th>
-                        <th>Vozilo</th>
-                        <th>Pacijent</th>
-                        <th>Kasa</th>
-                        <th>Transport</th>
-                        <th>Polazak</th>
-                        <th>Odredište</th>
-                        <th>Infekcija</th>
-                        <th>Napomena</th>
+                        <th>Zeit</th>
+                        <th>Fahrzeug</th>
+                        <th>Patient</th>
+                        <th>Krankenkasse</th>
+                        <th>Transportart</th>
+                        <th>Abholadresse</th>
+                        <th>Zieladresse</th>
+                        <th>Infektion</th>
+                        <th>Hinweis</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -120,52 +122,51 @@
             </table>
         </div>
 
-        <button class="btn-reset" onclick="resetujNoviDan()">Započni novi dan (Očisti radnu tablu za vozače)</button>
+        <button class="btn-reset" onclick="resetujNoviDan()">Neuen Tag starten (Live-Tafel zurücksetzen)</button>
     </div>
 
-    <!-- TAB 2: ARHIVA & ISTORIJA VOŽNJI -->
     <div id="historijaTab" class="tab-content">
         <div class="form-card">
-            <h3>Pretraga istorije vožnji</h3>
+            <h3>Archivsuche</h3>
             <div class="grid-form">
                 <div>
-                    <label><b>Izaberite datum:</b></label>
+                    <label><b>Datum auswählen:</b></label>
                     <input type="date" id="filterDatum" onchange="ucitajHistoriju()">
                 </div>
                 <div>
-                    <label><b>Filtrirajte po vozilu:</b></label>
+                    <label><b>Nach Fahrzeug filtern:</b></label>
                     <select id="filterVozilo" onchange="ucitajHistoriju()">
-                        <option value="Sva vozila">Sva vozila</option>
+                        <option value="Sva vozila">Alle Fahrzeuge</option>
                         <script>
                             for(let i=1; i<=10; i++) {
-                                document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
+                                document.write(`<option value="Fahrzeug ${i}">Fahrzeug ${i}</option>`);
                             }
                         </script>
                     </select>
                 </div>
                 <div>
-                    <label><b>Brza pretraga po imenu:</b></label>
-                    <input type="text" id="filterPretraga" onkeyup="filtrirajPoImenu()" placeholder="Pretraži pacijenta...">
+                    <label><b>Patientensuche:</b></label>
+                    <input type="text" id="filterPretraga" onkeyup="filtrirajPoImenu()" placeholder="Name eingeben...">
                 </div>
             </div>
         </div>
 
-        <h3>Pregled Arhive</h3>
+        <h3>Fahrtenbuch-Archiv</h3>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Nalog br.</th>
+                        <th>Auftrags-Nr.</th>
                         <th>Datum</th>
-                        <th>Vreme</th>
-                        <th>Vozilo</th>
-                        <th>Pacijent</th>
-                        <th>Kasa</th>
-                        <th>Transport</th>
-                        <th>Polazak</th>
-                        <th>Odredište</th>
-                        <th>Infekcija</th>
-                        <th>Konačni Status</th>
+                        <th>Zeit</th>
+                        <th>Fahrzeug</th>
+                        <th>Patient</th>
+                        <th>Krankenkasse</th>
+                        <th>Transportart</th>
+                        <th>Abholadresse</th>
+                        <th>Zieladresse</th>
+                        <th>Infektion</th>
+                        <th>Endstatus</th>
                     </tr>
                 </thead>
                 <tbody id="tabelaHistorija"></tbody>
@@ -174,7 +175,6 @@
     </div>
 
     <script>
-        // Postavi današnji datum u formu i filter
         const danasnjiDatum = new Date().toISOString().split('T')[0];
         document.getElementById('datum').value = danasnjiDatum;
         document.getElementById('filterDatum').value = danasnjiDatum;
@@ -203,7 +203,7 @@
             const infekcija = document.getElementById('infekcija').value;
             const napomena = document.getElementById('napomena').value;
 
-            if(!pacijent || !adresaPolazak) return alert('Popunite ime pacijenta i adresu polaska!');
+            if(!pacijent || !adresaPolazak) return alert('Bitte Patientenname und Abholadresse ausfüllen!');
 
             await fetch('/api/voznje', {
                 method: 'POST',
@@ -227,7 +227,7 @@
             tabela.innerHTML = '';
 
             podaci.forEach(v => {
-                const badgeKlasa = v.tipTransporta === 'Ležeći' ? 'badge-lezeci' : 'badge-transport';
+                const badgeKlasa = v.tipTransporta === 'Liegend' ? 'badge-liegend' : 'badge-transport';
                 tabela.innerHTML += `
                     <tr>
                         <td><b>#${v.id}</b></td>
@@ -236,10 +236,10 @@
                         <td><b>${v.vozilo}</b></td>
                         <td>${v.pacijent}</td>
                         <td>${v.kasa || '-'}</td>
-                        <td><span class="${badgeKlasa}">${v.tipTransporta || 'Sedeći'}</span></td>
+                        <td><span class="${badgeKlasa}">${v.tipTransporta || 'Sitzend'}</span></td>
                         <td>${v.adresaPolazak}</td>
                         <td>${v.adresaOdrediste || '-'}</td>
-                        <td>${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA</span>' : 'NE'}</td>
+                        <td>${v.infekcija === 'JA' ? '<span class="badge-infektion">JA</span>' : 'NEIN'}</td>
                         <td>${v.napomena || '-'}</td>
                         <td><span style="color: blue; font-weight: bold;">${v.status}</span></td>
                     </tr>
@@ -263,12 +263,12 @@
             tabela.innerHTML = '';
 
             if(podaci.length === 0) {
-                tabela.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nema sačuvanih vožnji za izabrani datum i vozilo.</td></tr>';
+                tabela.innerHTML = '<tr><td colspan="11" style="text-align:center;">Keine Datensätze für das gewählte Datum gefunden.</td></tr>';
                 return;
             }
 
             podaci.forEach(v => {
-                const badgeKlasa = v.tipTransporta === 'Ležeći' ? 'badge-lezeci' : 'badge-transport';
+                const badgeKlasa = v.tipTransporta === 'Liegend' ? 'badge-liegend' : 'badge-transport';
                 tabela.innerHTML += `
                     <tr>
                         <td><b>#${v.id}</b></td>
@@ -277,10 +277,10 @@
                         <td><b>${v.vozilo}</b></td>
                         <td><b>${v.pacijent}</b></td>
                         <td>${v.kasa || '-'}</td>
-                        <td><span class="${badgeKlasa}">${v.tipTransporta || 'Sedeći'}</span></td>
+                        <td><span class="${badgeKlasa}">${v.tipTransporta || 'Sitzend'}</span></td>
                         <td>${v.adresaPolazak}</td>
                         <td>${v.adresaOdrediste || '-'}</td>
-                        <td>${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA</span>' : 'NE'}</td>
+                        <td>${v.infekcija === 'JA' ? '<span class="badge-infektion">JA</span>' : 'NEIN'}</td>
                         <td><span style="color: green; font-weight: bold;">${v.status}</span></td>
                     </tr>
                 `;
@@ -294,7 +294,7 @@
         }
 
         async function resetujNoviDan() {
-            if(confirm("Da li ste sigurni da želite da očistite radnu tablu za vozače? (Sve vožnje ostaju sačuvane u Arhivi)")) {
+            if(confirm("Möchten Sie die Live-Tafel zurücksetzen? (Alle Daten bleiben im Archiv gespeichert)")) {
                 await fetch('/api/reset', { method: 'POST' });
                 ucitaj();
             }
