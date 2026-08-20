@@ -9,13 +9,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 const DATA_FILE = path.join(__dirname, 'baza_podataka.json');
 const BACKUP_FILE = path.join(__dirname, 'baza_podataka_backup.json');
 
-// Inicijalna struktura baze
 let baza = {
     voznje: [],
     poruke: []
 };
 
-// Sigurno učitavanje baze sa diska
 function ucitajBazu() {
     if (fs.existsSync(DATA_FILE)) {
         try {
@@ -24,21 +22,15 @@ function ucitajBazu() {
                 baza = JSON.parse(raw);
             }
         } catch (e) {
-            console.error("⚠️ Greška pri čitanju baze! Pravim rezervnu kopiju oštećenog fajla...", e);
-            fs.copyFileSync(DATA_FILE, path.join(__dirname, `baza_CORRUPTED_${Date.now()}.json`));
-            
+            console.error("Greška pri čitanju baze!", e);
             if (fs.existsSync(BACKUP_FILE)) {
                 try {
                     const rawBackup = fs.readFileSync(BACKUP_FILE, 'utf8');
                     baza = JSON.parse(rawBackup);
-                    console.log("✅ Uspešno vraćena baza iz backup fajla!");
-                } catch(err) {
-                    console.error("Greška pri čitanju backup-a");
-                }
+                } catch(err) {}
             }
         }
     }
-    
     if (!baza.voznje) baza.voznje = [];
     if (!baza.poruke) baza.poruke = [];
 }
@@ -47,9 +39,9 @@ ucitajBazu();
 
 function sacuvajBazu() {
     try {
-        const podaciGradja = JSON.stringify(baza, null, 2);
-        fs.writeFileSync(DATA_FILE, podaciGradja, 'utf8');
-        fs.writeFileSync(BACKUP_FILE, podaciGradja, 'utf8');
+        const podaci = JSON.stringify(baza, null, 2);
+        fs.writeFileSync(DATA_FILE, podaci, 'utf8');
+        fs.writeFileSync(BACKUP_FILE, podaci, 'utf8');
     } catch (e) {
         console.error("Greška pri čuvanju baze:", e);
     }
@@ -58,8 +50,6 @@ function sacuvajBazu() {
 function getDanasnjiDatum() {
     return new Date().toISOString().split('T')[0];
 }
-
-// ---------------- API RUTE ----------------
 
 // GET Vožnje
 app.get('/api/voznje', (req, res) => {
@@ -74,15 +64,16 @@ app.post('/api/voznje', (req, res) => {
         id: baza.voznje.length + 1,
         vozilo: req.body.vozilo,
         pacijent: req.body.pacijent,
-        datumRodjenja: req.body.datumRodjenja || '',
-        kasa: req.body.kasa || '',
+        datumRodjenja: req.body.datumRodjenja || 'k.A.',
+        kasa: req.body.kasa || '-',
         datum: req.body.datum || getDanasnjiDatum(),
-        vreme: req.body.vreme || '',
-        tipTransporta: req.body.tipTransporta || 'Sitzend',
+        vreme: req.body.vreme || '00:00',
+        tipTransporta: req.body.tipTransporta || '1',
         adresaPolazak: req.body.adresaPolazak,
-        adresaOdrediste: req.body.adresaOdrediste || '',
+        adresaOdrediste: req.body.adresaOdrediste || '-',
         infekcija: req.body.infekcija || 'NEIN',
-        napomena: req.body.napomena || '',
+        napomena: req.body.napomena || '-',
+        grund: req.body.grund || '-',
         status: 'Offen',
         kreirano: new Date().toISOString()
     };
@@ -104,7 +95,7 @@ app.post('/api/status', (req, res) => {
     }
 });
 
-// GET Poruke (Današnje)
+// GET Poruke
 app.get('/api/poruke', (req, res) => {
     const danas = getDanasnjiDatum();
     const danasnjePoruke = baza.poruke.filter(p => p.datum === danas);
@@ -148,17 +139,11 @@ app.get('/api/historija', (req, res) => {
     res.json({ voznje, poruke });
 });
 
-// GET Backup cele baze
+// GET Backup
 app.get('/api/backup', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename=backup_krankentransport_${getDanasnjiDatum()}.json`);
+    res.setHeader('Content-Disposition', `attachment; filename=backup_${getDanasnjiDatum()}.json`);
     res.send(JSON.stringify(baza, null, 2));
-});
-
-// Reset
-app.post('/api/reset', (req, res) => {
-    sacuvajBazu();
-    res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;
