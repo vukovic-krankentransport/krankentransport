@@ -28,7 +28,7 @@ db.run(`CREATE TABLE IF NOT EXISTS voznje (
     aktivan INTEGER DEFAULT 1
 )`);
 
-// Tabela za poruke (Chat)
+// Tabela za poruke
 db.run(`CREATE TABLE IF NOT EXISTS poruke (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     posiljalac TEXT,
@@ -37,7 +37,7 @@ db.run(`CREATE TABLE IF NOT EXISTS poruke (
     vreme TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )`);
 
-// RUTE ZA VOŽNJE
+// API RUTE ZA VOŽNJE
 app.get('/api/voznje', (req, res) => {
     db.all(`SELECT * FROM voznje WHERE aktivan = 1 ORDER BY id ASC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -97,7 +97,7 @@ app.post('/api/reset', (req, res) => {
     });
 });
 
-// RUTE ZA PORUKE (CHAT)
+// API RUTE ZA CHAT (Prikazuje sve poruke hronološki)
 app.get('/api/poruke', (req, res) => {
     db.all(`SELECT * FROM poruke ORDER BY id ASC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
