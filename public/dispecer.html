@@ -1,4 +1,9 @@
-let poslednjiBrojPoruka = 0;
+<script>
+        const danasnjiDatum = new Date().toISOString().split('T')[0];
+        document.getElementById('datum').value = danasnjiDatum;
+        document.getElementById('filterDatum').value = danasnjiDatum;
+
+        let poslednjiBrojPoruka = 0;
         let audioCtx = null;
 
         // Trostruki glasan BEEP signal za dispečera
@@ -8,13 +13,12 @@ let poslednjiBrojPoruka = 0;
                 if (audioCtx.state === 'suspended') audioCtx.resume();
 
                 const sada = audioCtx.currentTime;
-                // Emituje 3 uzastopna tona (BEEP-BEEP-BEEP)
                 [0, 0.25, 0.5].forEach((delay) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(880, sada + delay); // Visoki A5 ton
+                    osc.frequency.setValueAtTime(880, sada + delay);
                     
                     gain.gain.setValueAtTime(0.5, sada + delay);
                     gain.gain.exponentialRampToValueAtTime(0.01, sada + delay + 0.18);
@@ -28,13 +32,78 @@ let poslednjiBrojPoruka = 0;
             } catch(e) { console.log("Zvuk blokiran", e); }
         }
 
+        function otvoriTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            if(tabName === 'radnaTabla') {
+                oznaciProcitano();
+            }
+        }
+
+        function oznaciProcitano() {
+            document.getElementById('chatCard').classList.remove('nova-poruka');
+            document.getElementById('tabLiveBtn').classList.remove('has-unread');
+            document.getElementById('chatBadge').style.display = 'none';
+            document.getElementById('tabBadge').style.display = 'none';
+        }
+
+        async function dodajNalog() {
+            const vozilo = document.getElementById('vozilo').value;
+            const pacijent = document.getElementById('pacijent').value;
+            const kasa = document.getElementById('kasa').value;
+            const datum = document.getElementById('datum').value;
+            const vreme = document.getElementById('vreme').value;
+            const tipTransporta = document.getElementById('tipTransporta').value;
+            const adresaPolazak = document.getElementById('adresaPolazak').value;
+            const adresaOdrediste = document.getElementById('adresaOdrediste').value;
+            const infekcija = document.getElementById('infekcija').value;
+            const napomena = document.getElementById('napomena').value;
+
+            if(!pacijent || !adresaPolazak) return alert('Bitte Patientenname und Abholadresse ausfüllen!');
+
+            await fetch('/api/voznje', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vozilo, pacijent, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena })
+            });
+
+            document.getElementById('pacijent').value = '';
+            document.getElementById('adresaPolazak').value = '';
+            ucitaj();
+        }
+
+        async function ucitaj() {
+            const res = await fetch('/api/voznje');
+            const podaci = await res.json();
+            const tabela = document.getElementById('tabelaNaloga');
+            tabela.innerHTML = '';
+
+            podaci.forEach(v => {
+                tabela.innerHTML += `
+                    <tr>
+                        <td><b>#${v.id}</b></td>
+                        <td>${v.vreme || '-'}</td>
+                        <td><b>${v.vozilo}</b></td>
+                        <td>${v.pacijent}</td>
+                        <td>${v.tipTransporta || 'Sitzend'}</td>
+                        <td>${v.adresaPolazak}</td>
+                        <td>${v.adresaOdrediste || '-'}</td>
+                        <td><span style="color: blue; font-weight: bold;">${v.status}</span></td>
+                    </tr>
+                `;
+            });
+            ucitajPoruke();
+        }
+
         async function ucitajPoruke() {
             const res = await fetch('/api/poruke');
             const poruke = await res.json();
             const box = document.getElementById('chatBoxDispo');
             box.innerHTML = '';
 
-            // Pokreni zvučni i vizuelni signal ako stigne nova poruka od vozača
             if (poslednjiBrojPoruka > 0 && poruke.length > poslednjiBrojPoruka) {
                 const poslednjaPoruka = poruke[poruke.length - 1];
                 if(poslednjaPoruka.posiljalac !== 'Zentrale') {
@@ -59,3 +128,33 @@ let poslednjiBrojPoruka = 0;
             });
             box.scrollTop = box.scrollHeight;
         }
+
+        async function posaljiPorukuDispo() {
+            const input = document.getElementById('chatInputDispo');
+            const tekst = input.value.trim();
+            const vozilo = document.getElementById('chatVoziloSelect').value;
+
+            if(!tekst) return;
+
+            await fetch('/api/poruke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ posiljalac: 'Zentrale', vozilo, tekst })
+            });
+
+            input.value = '';
+            ucitajPoruke();
+        }
+
+        async function resetujNoviDan() {
+            if(confirm("Möchten Sie die Live-Tafel zurücksetzen?")) {
+                await fetch('/api/reset', { method: 'POST' });
+                ucitaj();
+            }
+        }
+
+        setInterval(ucitaj, 3000);
+        ucitaj();
+    </script>
+</body>
+</html>
