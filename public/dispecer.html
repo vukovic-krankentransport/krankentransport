@@ -9,8 +9,6 @@
         .header { background: #b02a37; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 24px; }
         
-        .audio-alert { background: #ffc107; color: #000; text-align: center; padding: 10px; font-weight: bold; border-radius: 6px; margin-bottom: 15px; cursor: pointer; border: 2px solid #e0a800; }
-
         .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } }
 
@@ -20,16 +18,13 @@
         button.btn-submit { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 15px; }
         .btn-backup { background: #0d6efd; color: white; border: none; font-weight: bold; cursor: pointer; padding: 10px; border-radius: 5px; width: auto; margin-right: 5px; }
         .btn-excel { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; padding: 10px; border-radius: 5px; width: auto; }
-        .btn-delete { background: #dc3545; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-weight: bold; }
 
         table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 13px; margin-bottom: 20px; }
         th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
         th { background: #b02a37; color: white; }
         
-        .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 580px; display: flex; flex-direction: column; border: 2px solid #ccc; transition: border-color 0.3s; }
-        .chat-card.nova-poruka { border-color: #dc3545; animation: blink 1s infinite; }
-        @keyframes blink { 0% { box-shadow: 0 0 10px #dc3545; } 50% { box-shadow: 0 0 0px #dc3545; } 100% { box-shadow: 0 0 10px #dc3545; } }
-
+        /* CHAT ZENTRALE */
+        .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 580px; display: flex; flex-direction: column; border: 2px solid #ccc; }
         .chat-box { flex-grow: 1; overflow-y: auto; background: #f8f9fa; border: 1px solid #ddd; border-radius: 5px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
         .chat-msg { padding: 8px 12px; border-radius: 6px; font-size: 13px; max-width: 85%; }
         .chat-msg.dispo { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
@@ -42,8 +37,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        .btn-tab-v { width: auto; padding: 6px 12px; margin: 0; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; background: #e9ecef; }
-        .btn-tab-v.active { background: #0d6efd; color: white; border-color: #0d6efd; }
+        .btn-tab-v { width: auto; padding: 6px 12px; margin: 0; font-size: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; }
         
         .archive-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
         @media (max-width: 900px) { .archive-layout { grid-template-columns: 1fr; } }
@@ -54,10 +48,6 @@
     <div class="header">
         <h1>VUKOVIC KRANKENTRANSPORTE</h1>
         <small>Disponenten-Steuerungssystem & Backup-Zentrale</small>
-    </div>
-
-    <div id="audioNotice" class="audio-alert">
-        🔊 KLIKNITE BILO GDE NA EKRAN DA BISTE AKTIVIRALI ZVUK ZA NOVE PORUKE!
     </div>
 
     <div class="tab-buttons">
@@ -87,22 +77,19 @@
                                 <option value="Fahrzeug 10">Fahrzeug 10</option>
                             </select>
                         </div>
-                        <div><label><b>Patient (Name):</b></label><input type="text" id="pacijent" placeholder="Name"></div>
-                        <div><label><b>Geburtsdatum:</b></label><input type="date" id="datumRodjenja"></div>
+                        <div><label><b>Patient:</b></label><input type="text" id="pacijent" placeholder="Name"></div>
                         <div><label><b>Krankenkasse:</b></label><input type="text" id="kasa" placeholder="AOK..."></div>
                         <div><label><b>Datum:</b></label><input type="date" id="datum"></div>
                         <div><label><b>Zeit:</b></label><input type="time" id="vreme"></div>
                         <div>
                             <label><b>Art:</b></label>
                             <select id="tipTransporta">
-                                <option value="1">1 (Sitzend)</option>
-                                <option value="2">2 (Liegend)</option>
-                                <option value="3">3 (Tragestuhl)</option>
+                                <option value="Sitzend">🚶 Sitzend</option>
+                                <option value="Liegend">🛏️ Liegend</option>
                             </select>
                         </div>
                         <div><label><b>Von (Start):</b></label><input type="text" id="adresaPolazak" placeholder="Adresse"></div>
                         <div><label><b>Nach (Ziel):</b></label><input type="text" id="adresaOdrediste" placeholder="Adresse"></div>
-                        <div><label><b>Grund:</b></label><input type="text" id="grund" placeholder="Rückfahrt FF..."></div>
                         <div>
                             <label><b>Infektion:</b></label>
                             <select id="infekcija">
@@ -110,7 +97,7 @@
                                 <option value="JA">JA</option>
                             </select>
                         </div>
-                        <div><label><b>Hinweis / Komm:</b></label><input type="text" id="napomena" placeholder="Info"></div>
+                        <div><label><b>Hinweis:</b></label><input type="text" id="napomena" placeholder="Info"></div>
                     </div>
                     <button class="btn-submit" onclick="dodajNalog()">Auftrag senden</button>
                 </div>
@@ -123,12 +110,11 @@
                                 <th>Nr.</th>
                                 <th>Zeit</th>
                                 <th>Fahrzeug</th>
-                                <th>Patient (Geburt)</th>
+                                <th>Patient</th>
                                 <th>Art</th>
                                 <th>Von</th>
                                 <th>Nach</th>
                                 <th>Status</th>
-                                <th>Aktion</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaNaloga"></tbody>
@@ -136,7 +122,7 @@
                 </div>
             </div>
 
-            <!-- CHAT ZENTRALE -->
+            <!-- CHAT ZENTRALE DA NÂS -->
             <div class="chat-card" id="chatCard">
                 <div style="margin-bottom: 10px;">
                     <h3 style="margin:0;">💬 Live Chat (Heute)</h3>
@@ -193,7 +179,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Nr.</th><th>Datum</th><th>Zeit</th><th>Fahrzeug</th><th>Patient (Geburt)</th><th>Von -> Nach</th><th>Status</th>
+                                <th>Nr.</th><th>Datum</th><th>Zeit</th><th>Fahrzeug</th><th>Patient</th><th>Von -> Nach</th><th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaHistorija"></tbody>
@@ -202,245 +188,235 @@
             </div>
 
             <div>
-                <h3>💬 Chat-Protokoll</h3>
-                <div id="chatBoxHistorija" class="chat-box" style="height: 400px;"></div>
+                <h3>💬 Archivierte Nachrichten (Chat-Protokoll)</h3>
+                <div class="chat-card" style="height: 450px;">
+                    <div id="chatArchiveBox" class="chat-box"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let trenutnoAktivnoVoziloChat = 'Fahrzeug 1';
-        let audioOmogucen = false;
-        let brojPorukaPre = 0;
-        const danasnjiDatumStr = new Date().toISOString().split('T')[0];
+        const danasnjiDatum = new Date().toISOString().split('T')[0];
+        document.getElementById('datum').value = danasnjiDatum;
+        document.getElementById('filterDatum').value = danasnjiDatum;
 
-        document.getElementById('datum').value = danasnjiDatumStr;
-        document.getElementById('filterDatum').value = danasnjiDatumStr;
+        let aktivnoVoziloChat = "Fahrzeug 1";
+        let neprocitanePoruke = {};
+        let trenutneHistorijeskeVoznje = [];
+        let audioCtx = null;
 
         function aktivirajAudio() {
-            if(!audioOmogucen) {
-                audioOmogucen = true;
-                document.getElementById('audioNotice').style.display = 'none';
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
-        function pustiZvuk() {
-            if(!audioOmogucen) return;
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, ctx.currentTime);
-            gain.gain.setValueAtTime(0.1, ctx.currentTime);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.2);
-        }
-
-        function otvoriTab(tabName, event) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        function otvoriTab(tabName, evt) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-
+            if(evt && evt.currentTarget) evt.currentTarget.classList.add('active');
+            
             if(tabName === 'historijaTab') {
                 ucitajHistoriju();
             }
         }
 
-        function generisiTabsZaVozila() {
-            const container = document.getElementById('chatVozilaTabs');
-            container.innerHTML = '';
-            for(let i = 1; i <= 10; i++) {
+        function kreirajteChatTabove() {
+            const tabsContainer = document.getElementById('chatVozilaTabs');
+            tabsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 10; i++) {
                 const vName = `Fahrzeug ${i}`;
-                const isActive = vName === trenutnoAktivnoVoziloChat ? 'active' : '';
-                container.innerHTML += `<button class="btn-tab-v ${isActive}" onclick="promeniChatVozilo('${vName}')">${vName}</button>`;
+                const isActive = vName === aktivnoVoziloChat ? 'background:#b02a37; color:white;' : 'background:#e0e0e0; color:#333;';
+                const hasBadge = neprocitanePoruke[vName] ? '🔴 ' : '';
+                
+                tabsContainer.innerHTML += `
+                    <button class="btn-tab-v" onclick="promeniChatVozilo('${vName}')" style="${isActive}">
+                        ${hasBadge}F${i}
+                    </button>
+                `;
             }
         }
 
         function promeniChatVozilo(vName) {
-            trenutnoAktivnoVoziloChat = vName;
-            generisiTabsZaVozila();
-            ucitajLivePodatke();
+            aktivnoVoziloChat = vName;
+            neprocitanePoruke[vName] = false;
+            kreirajteChatTabove();
+            ucitajPoruke();
         }
 
-        async function ucitajLivePodatke() {
-            try {
-                // Vožnje
-                const resVoznje = await fetch('/api/voznje');
-                const voznje = await resVoznje.json();
-                
-                const tabela = document.getElementById('tabelaNaloga');
-                tabela.innerHTML = '';
-                voznje.forEach(v => {
-                    tabela.innerHTML += `
-                        <tr>
-                            <td><b>${v.id}</b></td>
-                            <td>${v.vreme}</td>
-                            <td><b>${v.vozilo}</b></td>
-                            <td>${v.pacijent} (${v.datumRodjenja})</td>
-                            <td>${v.tipTransporta}</td>
-                            <td>${v.adresaPolazak}</td>
-                            <td>${v.adresaOdrediste}</td>
-                            <td><span style="background:#ffc107; padding:2px 6px; border-radius:4px; font-weight:bold;">${v.status}</span></td>
-                            <td><button class="btn-delete" onclick="obrisiNalog(${v.id})">X</button></td>
-                        </tr>
-                    `;
-                });
-
-                // Poruke
-                const resPoruke = await fetch('/api/poruke');
-                const poruke = await resPoruke.json();
-
-                if(poruke.length > brojPorukaPre) {
-                    if(brojPorukaPre !== 0) pustiZvuk();
-                    brojPorukaPre = poruke.length;
-                }
-
-                const chatBox = document.getElementById('chatBoxDispo');
-                chatBox.innerHTML = '';
-
-                const filtriranePoruke = poruke.filter(p => p.vozilo === trenutnoAktivnoVoziloChat);
-                filtriranePoruke.forEach(p => {
-                    const isDispo = p.posiljalac === 'Zentrale';
-                    chatBox.innerHTML += `
-                        <div class="chat-msg ${isDispo ? 'dispo' : 'fahrer'}">
-                            <small style="color:#666;">[${p.vreme}]</small> <b>${p.posiljalac}:</b> ${p.tekst}
-                        </div>
-                    `;
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-            } catch(e) {}
+        function oznaciProcitanoDispo() {
+            neprocitanePoruke[aktivnoVoziloChat] = false;
+            kreirajteChatTabove();
         }
 
         async function dodajNalog() {
-            const body = {
-                vozilo: document.getElementById('vozilo').value,
-                pacijent: document.getElementById('pacijent').value,
-                datumRodjenja: document.getElementById('datumRodjenja').value,
-                kasa: document.getElementById('kasa').value,
-                datum: document.getElementById('datum').value,
-                vreme: document.getElementById('vreme').value,
-                tipTransporta: document.getElementById('tipTransporta').value,
-                adresaPolazak: document.getElementById('adresaPolazak').value,
-                adresaOdrediste: document.getElementById('adresaOdrediste').value,
-                grund: document.getElementById('grund').value,
-                infekcija: document.getElementById('infekcija').value,
-                napomena: document.getElementById('napomena').value
-            };
+            const vozilo = document.getElementById('vozilo').value;
+            const pacijent = document.getElementById('pacijent').value;
+            const kasa = document.getElementById('kasa').value;
+            const datum = document.getElementById('datum').value;
+            const vreme = document.getElementById('vreme').value;
+            const tipTransporta = document.getElementById('tipTransporta').value;
+            const adresaPolazak = document.getElementById('adresaPolazak').value;
+            const adresaOdrediste = document.getElementById('adresaOdrediste').value;
+            const infekcija = document.getElementById('infekcija').value;
+            const napomena = document.getElementById('napomena').value;
 
-            if(!body.adresaPolazak || !body.pacijent) {
-                alert("Bitte Adresse und Name ausfüllen!");
-                return;
-            }
+            if(!pacijent || !adresaPolazak) return alert('Bitte Patientenname und Abholadresse ausfüllen!');
 
             await fetch('/api/voznje', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ vozilo, pacijent, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena })
             });
 
             document.getElementById('pacijent').value = '';
             document.getElementById('adresaPolazak').value = '';
-            document.getElementById('adresaOdrediste').value = '';
-            document.getElementById('napomena').value = '';
-            ucitajLivePodatke();
+            ucitaj();
         }
 
-        async function obrisiNalog(id) {
-            if(confirm("Auftrag wirklich löschen?")) {
-                await fetch(`/api/voznje/${id}`, { method: 'DELETE' });
-                ucitajLivePodatke();
-            }
-        }
+        async function ucitaj() {
+            try {
+                const res = await fetch('/api/voznje');
+                const podaci = await res.json();
+                const tabela = document.getElementById('tabelaNaloga');
+                tabela.innerHTML = '';
 
-        async function posaljiPorukuDispo() {
-            const input = document.getElementById('chatInputDispo');
-            const tekst = input.value.trim();
-            if(!tekst) return;
-
-            await fetch('/api/poruke', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ posiljalac: 'Zentrale', vozilo: trenutnoAktivnoVoziloChat, tekst })
-            });
-
-            input.value = '';
-            ucitajLivePodatke();
-        }
-
-        function oznaciProcitanoDispo() {
-            document.getElementById('chatCard').classList.remove('nova-poruka');
+                podaci.forEach(v => {
+                    tabela.innerHTML += `
+                        <tr>
+                            <td><b>#${v.id}</b></td>
+                            <td>${v.vreme || '-'}</td>
+                            <td><b>${v.vozilo}</b></td>
+                            <td>${v.pacijent}</td>
+                            <td>${v.tipTransporta || 'Sitzend'}</td>
+                            <td>${v.adresaPolazak}</td>
+                            <td>${v.adresaOdrediste || '-'}</td>
+                            <td><span style="color: blue; font-weight: bold;">${v.status}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch(e) {}
+            ucitajPoruke();
         }
 
         async function ucitajHistoriju() {
             const datum = document.getElementById('filterDatum').value;
             const vozilo = document.getElementById('filterVozilo').value;
+            try {
+                const res = await fetch(`/api/historija?datum=${datum}&vozilo=${vozilo}`);
+                const data = await res.json();
+                
+                trenutneHistorijeskeVoznje = data.voznje;
 
-            const res = await fetch(`/api/historija?datum=${datum}&vozilo=${encodeURIComponent(vozilo)}`);
-            const data = await res.json();
+                // Tabela vožnji
+                const tabela = document.getElementById('tabelaHistorija');
+                tabela.innerHTML = '';
+                data.voznje.forEach(v => {
+                    tabela.innerHTML += `
+                        <tr>
+                            <td><b>#${v.id}</b></td>
+                            <td>${v.datum}</td>
+                            <td>${v.vreme || '-'}</td>
+                            <td><b>${v.vozilo}</b></td>
+                            <td>${v.pacijent}</td>
+                            <td>${v.adresaPolazak} -> ${v.adresaOdrediste || '-'}</td>
+                            <td>${v.status}</td>
+                        </tr>
+                    `;
+                });
 
-            const tabela = document.getElementById('tabelaHistorija');
-            tabela.innerHTML = '';
-            data.voznje.forEach(v => {
-                tabela.innerHTML += `
-                    <tr>
-                        <td><b>${v.id}</b></td>
-                        <td>${v.datum}</td>
-                        <td>${v.vreme}</td>
-                        <td><b>${v.vozilo}</b></td>
-                        <td>${v.pacijent} (${v.datumRodjenja})</td>
-                        <td>${v.adresaPolazak} -> ${v.adresaOdrediste}</td>
-                        <td>${v.status}</td>
-                    </tr>
-                `;
+                // Arhiva chata za taj dan
+                const chatBox = document.getElementById('chatArchiveBox');
+                chatBox.innerHTML = '';
+                if(data.poruke.length === 0) {
+                    chatBox.innerHTML = '<small style="color:#777; text-align:center;">Keine Nachrichten für diesen Tag/Fahrzeug.</small>';
+                } else {
+                    data.poruke.forEach(p => {
+                        const isDispo = p.posiljalac === 'Zentrale';
+                        const msgClass = isDispo ? 'chat-msg dispo' : 'chat-msg fahrer';
+                        chatBox.innerHTML += `
+                            <div class="${msgClass}">
+                                <small style="color:#666;">[${p.vreme}] ${p.vozilo}</small><br>
+                                <b>${p.posiljalac}:</b> ${p.tekst}
+                            </div>
+                        `;
+                    });
+                }
+
+            } catch(e) {}
+        }
+
+        async function ucitajPoruke() {
+            try {
+                const res = await fetch('/api/poruke');
+                const poruke = await res.json();
+                const box = document.getElementById('chatBoxDispo');
+                box.innerHTML = '';
+
+                const filtriranePoruke = poruke.filter(p => p.vozilo === aktivnoVoziloChat);
+
+                poruke.forEach(p => {
+                    if (p.posiljalac !== 'Zentrale' && p.vozilo !== aktivnoVoziloChat) {
+                        neprocitanePoruke[p.vozilo] = true;
+                    }
+                });
+                kreirajteChatTabove();
+
+                filtriranePoruke.forEach(p => {
+                    const isDispo = p.posiljalac === 'Zentrale';
+                    const msgClass = isDispo ? 'chat-msg dispo' : 'chat-msg fahrer';
+                    box.innerHTML += `
+                        <div class="${msgClass}">
+                            <small style="color:#666;">[${p.vreme}]</small> <b>${p.posiljalac}:</b> ${p.tekst}
+                        </div>
+                    `;
+                });
+                box.scrollTop = box.scrollHeight;
+            } catch(e) {}
+        }
+
+        async function posaljiPorukuDispo() {
+            const input = document.getElementById('chatInputDispo');
+            const tekst = input.value.trim();
+
+            if(!tekst) return;
+
+            await fetch('/api/poruke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ posiljalac: 'Zentrale', vozilo: aktivnoVoziloChat, tekst })
             });
 
-            const chatBox = document.getElementById('chatBoxHistorija');
-            chatBox.innerHTML = '';
-            data.poruke.forEach(p => {
-                const isDispo = p.posiljalac === 'Zentrale';
-                chatBox.innerHTML += `
-                    <div class="chat-msg ${isDispo ? 'dispo' : 'fahrer'}">
-                        <small style="color:#666;">[${p.vreme}] (${p.vozilo})</small><br><b>${p.posiljalac}:</b> ${p.tekst}
-                    </div>
-                `;
-            });
+            input.value = '';
+            ucitajPoruke();
         }
 
         function downloadBackup() {
             window.location.href = '/api/backup';
         }
 
-        async function exportToCSV() {
-            const datum = document.getElementById('filterDatum').value;
-            const res = await fetch(`/api/historija?datum=${datum}&vozilo=Sva%20vozila`);
-            const data = await res.json();
-
-            if(!data.voznje.length) {
-                alert("Keine Daten zum Exportieren vorhanden!");
-                return;
-            }
-
-            let csvContent = "data:text/csv;charset=utf-8,ID;Datum;Zeit;Fahrzeug;Patient;Von;Nach;Status\n";
-            data.voznje.forEach(v => {
-                csvContent += `${v.id};${v.datum};${v.vreme};${v.vozilo};${v.pacijent};${v.adresaPolazak};${v.adresaOdrediste};${v.status}\n`;
+        function exportToCSV() {
+            if(!trenutneHistorijeskeVoznje.length) return alert('Keine Daten zum Exportieren!');
+            
+            let csv = 'ID;Datum;Zeit;Fahrzeug;Patient;Krankenkasse;Von;Nach;Status\n';
+            trenutneHistorijeskeVoznje.forEach(v => {
+                csv += `${v.id};${v.datum};${v.vreme};${v.vozilo};${v.pacijent};${v.kasa};${v.adresaPolazak};${v.adresaOdrediste};${v.status}\n`;
             });
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `fahrten_${datum}.csv`);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', `Fahrtenbuch_${document.getElementById('filterDatum').value}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        generisiTabsZaVozila();
-        setInterval(ucitajLivePodatke, 3000);
-        ucitajLivePodatke();
+        kreirajteChatTabove();
+        setInterval(ucitaj, 3000);
+        ucitaj();
     </script>
 </body>
 </html>
