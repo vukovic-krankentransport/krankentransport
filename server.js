@@ -51,7 +51,7 @@ function getDanasnjiDatum() {
     return new Date().toISOString().split('T')[0];
 }
 
-// GET Vožnje
+// GET Vožnje (Aktivne + današnje završene)
 app.get('/api/voznje', (req, res) => {
     const danas = getDanasnjiDatum();
     const aktivne = baza.voznje.filter(v => v.status !== 'Erledigt' || v.datum === danas);
@@ -93,6 +93,14 @@ app.post('/api/status', (req, res) => {
     } else {
         res.status(404).json({ error: 'Vožnja nije pronađena' });
     }
+});
+
+// DELETE Brisanje vožnje
+app.delete('/api/voznje/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    baza.voznje = baza.voznje.filter(v => v.id !== id);
+    sacuvajBazu();
+    res.json({ success: true });
 });
 
 // GET Poruke
