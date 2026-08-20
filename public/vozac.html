@@ -1,31 +1,147 @@
-let poslednjiBrojPorukaVozac = 0;
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fahrer App - Vukovic</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 15px; background: #f4f6f9; margin: 0; }
+        .header { background: #0d6efd; color: white; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        select, input, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        button { background: #198754; color: white; border: none; font-weight: bold; cursor: pointer; }
+        
+        /* CHAT STYLE */
+        .chat-card { border: 2px solid #ccc; transition: border-color 0.3s; }
+        .chat-card.nova-poruka { border-color: #dc3545; animation: blink 1s infinite; }
+        @keyframes blink { 0% { box-shadow: 0 0 10px #dc3545; } 50% { box-shadow: 0 0 0px #dc3545; } 100% { box-shadow: 0 0 10px #dc3545; } }
+        
+        .chat-box { height: 250px; overflow-y: auto; background: #eef2f5; border: 1px solid #ddd; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .chat-msg { padding: 8px 12px; border-radius: 6px; font-size: 14px; max-width: 80%; word-break: break-word; }
+        .chat-msg.zentrale { background: #fff3cd; align-self: flex-start; border: 1px solid #ffecb5; }
+        .chat-msg.self { background: #d1e7dd; align-self: flex-end; border: 1px solid #badbcc; }
+        
+        .badge { background: #dc3545; color: white; padding: 2px 6px; border-radius: 10px; font-size: 12px; display: none; }
+        .order-card { background: white; border-left: 5px solid #0d6efd; padding: 10px; margin-bottom: 10px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body onclick="aktivirajAudio()">
+
+    <div class="header">
+        <h2 style="margin:0;">🚗 Fahrer App</h2>
+    </div>
+
+    <!-- IZBOR VOZILA -->
+    <div class="card">
+        <label><b>Wählen Sie Ihr Fahrzeug:</b></label>
+        <select id="izborVozila" onchange="sacuvajVozilo()">
+            <option value="">-- Fahrzeug wählen --</option>
+            <option value="Fahrzeug 1">Fahrzeug 1</option>
+            <option value="Fahrzeug 2">Fahrzeug 2</option>
+            <option value="Fahrzeug 3">Fahrzeug 3</option>
+            <option value="Fahrzeug 4">Fahrzeug 4</option>
+            <option value="Fahrzeug 5">Fahrzeug 5</option>
+            <option value="Fahrzeug 6">Fahrzeug 6</option>
+            <option value="Fahrzeug 7">Fahrzeug 7</option>
+            <option value="Fahrzeug 8">Fahrzeug 8</option>
+            <option value="Fahrzeug 9">Fahrzeug 9</option>
+            <option value="Fahrzeug 10">Fahrzeug 10</option>
+        </select>
+    </div>
+
+    <!-- NALOZI -->
+    <div class="card">
+        <h3>Meine Aufträge</h3>
+        <div id="listaNaloga">Wählen Sie ein Fahrzeug...</div>
+    </div>
+
+    <!-- CHAT VOZAČ -->
+    <div class="card chat-card" id="chatCardVozac" onclick="oznaciProcitanoVozac()">
+        <h3>💬 Chat mit Zentrale <span id="vozacBadge" class="badge">NEU!</span></h3>
+        <div id="chatBox" class="chat-box"></div>
+        <input type="text" id="chatInput" placeholder="Nachricht an Zentrale..." onkeypress="if(event.key==='Enter') posaljiPorukuVozac()">
+        <button onclick="posaljiPorukuVozac()">Senden</button>
+    </div>
+
+    <script>
+        let poslednjiBrojPorukaVozac = 0;
         let audioCtx = null;
 
-        // Trostruki glasan BEEP signal za vozača (na mobilnom telefonu)
+        // Inicijalizacija tona na dodir ekrana
+        function aktivirajAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Trostruki glasan BEEP signal
         function svirajZvuk() {
             try {
-                if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                aktivirajAudio();
+                if (!audioCtx) return;
 
                 const sada = audioCtx.currentTime;
-                // Emituje 3 uzastopna tona
-                [0, 0.25, 0.5].forEach((delay) => {
+                [0, 0.2, 0.4].forEach((delay) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(987.77, sada + delay); // Visoki B5 ton
+                    osc.frequency.setValueAtTime(987.77, sada + delay); // Visoki tone (B5)
                     
                     gain.gain.setValueAtTime(0.6, sada + delay);
-                    gain.gain.exponentialRampToValueAtTime(0.01, sada + delay + 0.18);
+                    gain.gain.exponentialRampToValueAtTime(0.01, sada + delay + 0.15);
 
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
 
                     osc.start(sada + delay);
-                    osc.stop(sada + delay + 0.18);
+                    osc.stop(sada + delay + 0.15);
                 });
             } catch(e) {}
+        }
+
+        function sacuvajVozilo() {
+            const v = document.getElementById('izborVozila').value;
+            localStorage.setItem('izabranoVozilo', v);
+            ucitajVoznje();
+        }
+
+        function oznaciProcitanoVozac() {
+            document.getElementById('chatCardVozac').classList.remove('nova-poruka');
+            document.getElementById('vozacBadge').style.display = 'none';
+        }
+
+        async function ucitajVoznje() {
+            const mojeVozilo = localStorage.getItem('izabranoVozilo');
+            if(!mojeVozilo) return;
+
+            try {
+                const res = await fetch('/api/voznje');
+                const sveVoznje = await res.json();
+                const mojeeVoznje = sveVoznje.filter(v => v.vozilo === mojeVozilo);
+
+                const container = document.getElementById('listaNaloga');
+                if(mojeeVoznje.length === 0) {
+                    container.innerHTML = '<p>Keine aktiven Aufträge.</p>';
+                } else {
+                    container.innerHTML = '';
+                    mojeeVoznje.forEach(v => {
+                        container.innerHTML += `
+                            <div class="order-card">
+                                <b>Zeit:</b> ${v.vreme || '-'} | <b>Patient:</b> ${v.pacijent}<br>
+                                <b>Von:</b> ${v.adresaPolazak}<br>
+                                <b>Nach:</b> ${v.adresaOdrediste || '-'}<br>
+                                <b>Art:</b> ${v.tipTransporta || 'Sitzend'} | <b>Infektion:</b> ${v.infekcija || 'NEIN'}<br>
+                                <small>Hinweis: ${v.napomena || '-'}</small>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(err) {}
+            ucitajPoruke();
         }
 
         async function ucitajPoruke() {
@@ -35,20 +151,24 @@ let poslednjiBrojPorukaVozac = 0;
             try {
                 const res = await fetch('/api/poruke');
                 const poruke = await res.json();
+                
+                // Filtriraj poruke namenjene ovom vozilu ili svima
+                const mojePoruke = poruke.filter(p => p.vozilo === mojeVozilo || p.vozilo === 'Alle Fahrzeuge' || p.posiljalac === mojeVozilo);
+                
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
 
-                if (poslednjiBrojPorukaVozac > 0 && poruke.length > poslednjiBrojPorukaVozac) {
-                    const poslednja = poruke[poruke.length - 1];
+                if (poslednjiBrojPorukaVozac > 0 && mojePoruke.length > poslednjiBrojPorukaVozac) {
+                    const poslednja = mojePoruke[mojePoruke.length - 1];
                     if(poslednja.posiljalac === 'Zentrale') {
                         svirajZvuk();
                         document.getElementById('chatCardVozac').classList.add('nova-poruka');
                         document.getElementById('vozacBadge').style.display = 'inline';
                     }
                 }
-                poslednjiBrojPorukaVozac = poruke.length;
+                poslednjiBrojPorukaVozac = mojePoruke.length;
 
-                poruke.forEach(p => {
+                mojePoruke.forEach(p => {
                     const isDispo = p.posiljalac === 'Zentrale';
                     const msgClass = isDispo ? 'chat-msg zentrale' : 'chat-msg self';
                     box.innerHTML += `
@@ -60,3 +180,34 @@ let poslednjiBrojPorukaVozac = 0;
                 box.scrollTop = box.scrollHeight;
             } catch (err) {}
         }
+
+        async function posaljiPorukuVozac() {
+            const mojeVozilo = localStorage.getItem('izabranoVozilo');
+            const input = document.getElementById('chatInput');
+            const tekst = input.value.trim();
+
+            if(!mojeVozilo) return alert('Bitte zuerst Fahrzeug auswählen!');
+            if(!tekst) return;
+
+            await fetch('/api/poruke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ posiljalac: mojeVozilo, vozilo: 'Zentrale', tekst })
+            });
+
+            input.value = '';
+            ucitajPoruke();
+        }
+
+        // Auto-učitavanje sačuvanog vozila
+        window.onload = () => {
+            const sacuvano = localStorage.getItem('izabranoVozilo');
+            if(sacuvano) {
+                document.getElementById('izborVozila').value = sacuvano;
+            }
+            ucitajVoznje();
+            setInterval(ucitajVoznje, 3000);
+        };
+    </script>
+</body>
+</html>
