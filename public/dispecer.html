@@ -1,37 +1,45 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="sr">
 <head>
     <meta charset="UTF-8">
-    <title>Dispo Zentrale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vuković Krankentransport - Dispečer</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .header { background-color: #1a252f; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .main-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .form-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 320px; }
+        .table-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 2; min-width: 500px; }
         .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #007aff; color: white; border: none; padding: 10px; border-radius: 4px; width: 100%; font-weight: bold; cursor: pointer; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-        th { background: #f8f9fa; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; color: white; }
-        .st-1 { background: #007aff; }
-        .st-2 { background: #ff9500; }
-        .st-3 { background: #5856d6; }
-        .st-4 { background: #af52de; }
-        .st-5 { background: #34c759; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        button.btn-submit { background-color: #27ae60; color: white; border: none; padding: 12px; border-radius: 5px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button.btn-submit:hover { background-color: #219150; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e1e4e8; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #f8f9fa; color: #2c3e50; }
+        .badge { padding: 5px 10px; border-radius: 12px; color: white; font-weight: bold; font-size: 12px; display: inline-block; }
+        .st-1 { background-color: #3498db; }
+        .st-2 { background-color: #f39c12; }
+        .st-3 { background-color: #9b59b6; }
+        .st-4 { background-color: #8e44ad; }
+        .st-5 { background-color: #2ecc71; }
     </style>
 </head>
 <body>
 
-<h2>Disponenten-Dashboard</h2>
+<div class="header">
+    <h1>Vuković Krankentransport</h1>
+    <span>Dispečerski Centar</span>
+</div>
 
-<div class="grid">
-    <div class="card">
-        <h3>Neuer Auftrag</h3>
-        <form id="auftragForm">
+<div class="main-container">
+    <div class="form-section">
+        <h3>Unos novog naloga</h3>
+        <form id="dispoForm">
             <div class="form-group">
-                <label>Fahrzeug</label>
+                <label>Vozilo</label>
                 <select id="vozilo" required>
                     <option value="Fahrzeug 1">Fahrzeug 1</option>
                     <option value="Fahrzeug 2">Fahrzeug 2</option>
@@ -41,55 +49,53 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Art (Sitzend / Liegend...)</label>
+                <label>Tip transporta</label>
                 <input type="text" id="tipTransporta" value="Sitzend">
             </div>
             <div class="form-group">
-                <label>Patient Name</label>
-                <input type="text" id="pacijent" required>
+                <label>Pacijent (Ime i prezime)</label>
+                <input type="text" id="pacijent" required placeholder="Unesite ime pacijenta">
             </div>
             <div class="form-group">
-                <label>Geburtsdatum</label>
+                <label>Datum rođenja</label>
                 <input type="date" id="datumRodjenja">
             </div>
             <div class="form-group">
-                <label>Datum & Zeit</label>
+                <label>Datum i vreme polaska</label>
                 <input type="date" id="datum">
-                <input type="time" id="vreme" style="margin-top:5px;">
+                <input type="time" id="vreme" style="margin-top: 5px;">
             </div>
             <div class="form-group">
-                <label>Von (Start)</label>
-                <input type="text" id="adresaPolazak" required>
+                <label>Adresa polaska (Von)</label>
+                <input type="text" id="adresaPolazak" required placeholder="Polazna adresa">
             </div>
             <div class="form-group">
-                <label>Nach (Ziel)</label>
-                <input type="text" id="adresaOdrediste" required>
+                <label>Adresa odredišta (Nach)</label>
+                <input type="text" id="adresaOdrediste" required placeholder="Odredišna adresa">
             </div>
             <div class="form-group">
-                <label>Grund</label>
-                <input type="text" id="grund" placeholder="Svrha transporta...">
+                <label>Grund (Razlog)</label>
+                <input type="text" id="grund" placeholder="Razlog/napomena za vožnju">
             </div>
-            <button type="submit">Auftrag Senden</button>
+            <button type="submit" class="btn-submit">Pošalji nalog vozaču</button>
         </form>
     </div>
 
-    <div>
-        <div class="card">
-            <h3>Aktive Aufträge</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Fahrzeug</th>
-                        <th>Patient</th>
-                        <th>Von / Nach</th>
-                        <th>Grund</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="tabelaVoznji"></tbody>
-            </table>
-        </div>
+    <div class="table-section">
+        <h3>Aktivni nalozi</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Vozilo</th>
+                    <th>Pacijent</th>
+                    <th>Ruta (Von ➔ Nach)</th>
+                    <th>Grund</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaVoznji"></tbody>
+        </table>
     </div>
 </div>
 
@@ -111,7 +117,7 @@
                     <tr>
                         <td><b>#${v.id}</b></td>
                         <td>${v.vozilo}</td>
-                        <td>${v.pacijent}<br><small>${v.datumRodjenja || ''}</small></td>
+                        <td>${v.pacijent}<br><small style="color:#666;">${v.datumRodjenja || ''}</small></td>
                         <td>${v.adresaPolazak}<br>➔ ${v.adresaOdrediste}</td>
                         <td><b>${v.grund || '-'}</b></td>
                         <td><span class="badge ${badgeClass}">${v.status}</span></td>
@@ -121,7 +127,7 @@
         } catch(e) {}
     }
 
-    document.getElementById('auftragForm').addEventListener('submit', async (e) => {
+    document.getElementById('dispoForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
             vozilo: document.getElementById('vozilo').value,
@@ -141,7 +147,7 @@
             body: JSON.stringify(data)
         });
 
-        document.getElementById('auftragForm').reset();
+        document.getElementById('dispoForm').reset();
         ucitajVoznje();
     });
 
