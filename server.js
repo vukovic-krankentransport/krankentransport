@@ -7,53 +7,42 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_FILE = path.join(__dirname, 'baza_podataka.json');
-const BACKUP_FILE = path.join(__dirname, 'baza_podataka_backup.json');
 
+// Inicijalna struktura baze
 let baza = {
     voznje: [],
     poruke: []
 };
 
-function ucitajBazu() {
-    if (fs.existsSync(DATA_FILE)) {
-        try {
-            const raw = fs.readFileSync(DATA_FILE, 'utf8');
-            if (raw.trim().length > 0) {
-                baza = JSON.parse(raw);
-            }
-        } catch (e) {
-            console.error("Greška pri čitanju baze!", e);
-            if (fs.existsSync(BACKUP_FILE)) {
-                try {
-                    const rawBackup = fs.readFileSync(BACKUP_FILE, 'utf8');
-                    baza = JSON.parse(rawBackup);
-                } catch(err) {}
-            }
-        }
+// Učitavanje baze sa diska
+if (fs.existsSync(DATA_FILE)) {
+    try {
+        const raw = fs.readFileSync(DATA_FILE, 'utf8');
+        baza = JSON.parse(raw);
+        if (!baza.voznje) baza.voznje = [];
+        if (!baza.poruke) baza.poruke = [];
+    } catch (e) {
+        console.error("Greška pri čitanju baze:", e);
     }
-    if (!baza.voznje) baza.voznje = [];
-    if (!baza.poruke) baza.poruke = [];
 }
-
-ucitajBazu();
 
 function sacuvajBazu() {
-    try {
-        const podaci = JSON.stringify(baza, null, 2);
-        fs.writeFileSync(DATA_FILE, podaci, 'utf8');
-        fs.writeFileSync(BACKUP_FILE, podaci, 'utf8');
-    } catch (e) {
-        console.error("Greška pri čuvanju baze:", e);
-    }
+    fs.writeFileSync(DATA_FILE, JSON.stringify(baza, null, 2), 'utf8');
 }
 
+// Pomocna funkcija za dobijanje danasnjeg datuma u YYYY-MM-DD formatu
 function getDanasnjiDatum() {
     return new Date().toISOString().split('T')[0];
 }
 
-// GET Sve vožnje
+// ---------------- API RUTE ----------------
+
+// GET Vožnje (Aktivne na radnoj tabli)
 app.get('/api/voznje', (req, res) => {
-    res.json(baza.voznje);
+    // Vraćaju se samo vožnje koje nisu "Erledigt" ili su kreirane danas
+    const danas = getDanasnjiDatum();
+    const aktivne = baza.voznje.filter(v => v.status !== 'Erledigt' || v.datum === danas);
+    res.json(aktivne);
 });
 
 // POST Nova vožnja
@@ -62,17 +51,15 @@ app.post('/api/voznje', (req, res) => {
         id: baza.voznje.length + 1,
         vozilo: req.body.vozilo,
         pacijent: req.body.pacijent,
-        datumRodjenja: req.body.datumRodjenja || 'k.A.',
-        kasa: req.body.kasa || '-',
+        kasa: req.body.kasa || '',
         datum: req.body.datum || getDanasnjiDatum(),
-        vreme: req.body.vreme || '00:00',
-        tipTransporta: req.body.tipTransporta || '1',
+        vreme: req.body.vreme || '',
+        tipTransporta: req.body.tipTransporta || 'Sitzend',
         adresaPolazak: req.body.adresaPolazak,
-        adresaOdrediste: req.body.adresaOdrediste || '-',
+        adresaOdrediste: req.body.adresaOdrediste || '',
         infekcija: req.body.infekcija || 'NEIN',
-        napomena: req.body.napomena || '-',
-        grund: req.body.grund || '-',
-        status: '1. Anfahrt',
+        napomena: req.body.napomena || '',
+        status: 'Offen',
         kreirano: new Date().toISOString()
     };
     baza.voznje.push(novaVoznja);
@@ -93,17 +80,12 @@ app.post('/api/status', (req, res) => {
     }
 });
 
-// DELETE Brisanje vožnje
-app.delete('/api/voznje/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    baza.voznje = baza.voznje.filter(v => v.id !== id);
-    sacuvajBazu();
-    res.json({ success: true });
-});
-
-// GET Poruke
+// GET Poruke (Aktivni dnevni chat)
 app.get('/api/poruke', (req, res) => {
-    res.json(baza.poruke);
+    const danas = getDanasnjiDatum();
+    // Vraćaju se samo današnje poruke za aktivni chat
+    const danasnjePoruke = baza.poruke.filter(p => p.datum === danas);
+    res.json(danasnjePoruke);
 });
 
 // POST Nova poruka
@@ -123,9 +105,10 @@ app.post('/api/poruke', (req, res) => {
     res.json({ success: true, poruka: novaPoruka });
 });
 
-// GET Historija za filtriranje
+// GET Historija (Arhiva vožnji i poruka po datumu)
 app.get('/api/historija', (req, res) => {
     const { datum, vozilo } = req.query;
+
     let voznje = baza.voznje;
     let poruke = baza.poruke;
 
@@ -142,11 +125,18 @@ app.get('/api/historija', (req, res) => {
     res.json({ voznje, poruke });
 });
 
-// GET Backup
+// GET Backup cele baze
 app.get('/api/backup', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename=backup_${getDanasnjiDatum()}.json`);
+    res.setHeader('Content-Disposition', `attachment; filename=backup_krankentransport_${getDanasnjiDatum()}.json`);
     res.send(JSON.stringify(baza, null, 2));
+});
+
+// Reset za novi dan
+app.post('/api/reset', (req, res) => {
+    // Svi nedovršeni zadaci se prebacuju u Erledigt ili se osvežava prikaz
+    sacuvajBazu();
+    res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;
