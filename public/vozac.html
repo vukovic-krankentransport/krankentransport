@@ -14,7 +14,7 @@
         .vehicle-select { font-weight: bold; font-size: 14px; padding: 6px; border-radius: 4px; border: 1px solid #aaa; }
         .btn-status-top { background: #4a90e2; color: white; border: none; padding: 8px 16px; font-weight: bold; font-size: 14px; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         
-        /* KARTICA NALOGA - IDENTIČNA KAO SA SLIKE */
+        /* KARTICA NALOGA */
         .einsatz-card { background: #ecece3; border: 1px solid #bbb; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .row { display: flex; margin-bottom: 10px; align-items: flex-start; }
         .label { width: 100px; font-weight: bold; color: #55547e; flex-shrink: 0; font-size: 15px; }
@@ -88,6 +88,9 @@
         let poslednjiBrojPorukaVozac = 0;
         let audioCtx = null;
 
+        document.addEventListener('touchstart', aktivirajAudio, { once: true });
+        document.addEventListener('click', aktivirajAudio);
+
         function aktivirajAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -127,6 +130,7 @@
         }
 
         function promenaVozila() {
+            aktivirajAudio();
             const val = document.getElementById('voziloSelect').value;
             localStorage.setItem('izabranoVozilo', val);
             ucitajVoznje();
@@ -218,6 +222,7 @@
         }
 
         async function promeniStatus(id, noviStatus) {
+            aktivirajAudio();
             await fetch('/api/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -232,21 +237,25 @@
 
             try {
                 const res = await fetch('/api/poruke');
-                const poruke = await res.json();
+                const svePoruke = await res.json();
+                
+                // Prikaz samo onih poruka vezanih za izabrano vozilo
+                const mojePoruke = svePoruke.filter(p => p.vozilo === mojeVozilo);
+                
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
 
-                if (poslednjiBrojPorukaVozac > 0 && poruke.length > poslednjiBrojPorukaVozac) {
-                    const poslednja = poruke[poruke.length - 1];
+                if (poslednjiBrojPorukaVozac > 0 && mojePoruke.length > poslednjiBrojPorukaVozac) {
+                    const poslednja = mojePoruke[mojePoruke.length - 1];
                     if(poslednja.posiljalac === 'Zentrale') {
                         svirajZvuk();
                         document.getElementById('chatCardVozac').classList.add('nova-poruka');
                         document.getElementById('vozacBadge').style.display = 'inline';
                     }
                 }
-                poslednjiBrojPorukaVozac = poruke.length;
+                poslednjiBrojPorukaVozac = mojePoruke.length;
 
-                poruke.forEach(p => {
+                mojePoruke.forEach(p => {
                     const isDispo = p.posiljalac === 'Zentrale';
                     const msgClass = isDispo ? 'chat-msg zentrale' : 'chat-msg self';
                     box.innerHTML += `
@@ -260,6 +269,7 @@
         }
 
         async function posaljiPoruku() {
+            aktivirajAudio();
             const input = document.getElementById('chatInput');
             const tekst = input.value.trim();
             const mojeVozilo = localStorage.getItem('izabranoVozilo') || 'Fahrzeug 1';
