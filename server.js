@@ -1,12 +1,8 @@
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -29,11 +25,13 @@ function saveData(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+// Get sve vožnje
 app.get('/api/voznje', (req, res) => {
     const data = readData();
     res.json(data.voznje || []);
 });
 
+// Dodaj ili izmeni vožnju
 app.post('/api/voznje', (req, res) => {
     const data = readData();
     if (!data.voznje) data.voznje = [];
@@ -53,10 +51,10 @@ app.post('/api/voznje', (req, res) => {
     }
 
     saveData(data);
-    io.emit('update', data);
     res.json({ success: true, voznja: novaVoznja });
 });
 
+// Promena statusa
 app.post('/api/status', (req, res) => {
     const { id, status } = req.body;
     const data = readData();
@@ -66,13 +64,13 @@ app.post('/api/status', (req, res) => {
     if (voznja) {
         voznja.status = status;
         saveData(data);
-        io.emit('update', data);
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Nije pronadjeno' });
     }
 });
 
+// Poruke
 app.get('/api/poruke', (req, res) => {
     const data = readData();
     res.json(data.poruke || []);
@@ -92,11 +90,10 @@ app.post('/api/poruke', (req, res) => {
     };
     data.poruke.push(poruka);
     saveData(data);
-    io.emit('nova_poruka', poruka);
     res.json({ success: true });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server radi na portu ${PORT}`);
 });
