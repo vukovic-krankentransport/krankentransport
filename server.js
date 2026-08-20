@@ -17,23 +17,27 @@ function readData() {
     if (!fs.existsSync(DATA_FILE)) {
         return { voznje: [], poruke: [] };
     }
-    const raw = fs.readFileSync(DATA_FILE);
-    return JSON.parse(raw);
+    try {
+        const raw = fs.readFileSync(DATA_FILE);
+        return JSON.parse(raw);
+    } catch (e) {
+        return { voznje: [], poruke: [] };
+    }
 }
 
 function saveData(data) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// Get Vožnje
 app.get('/api/voznje', (req, res) => {
     const data = readData();
-    res.json(data.voznje);
+    res.json(data.voznje || []);
 });
 
-// Dodaj / Izmeni Vožnju
 app.post('/api/voznje', (req, res) => {
     const data = readData();
+    if (!data.voznje) data.voznje = [];
+    
     const novaVoznja = req.body;
 
     if (!novaVoznja.id) {
@@ -53,10 +57,11 @@ app.post('/api/voznje', (req, res) => {
     res.json({ success: true, voznja: novaVoznja });
 });
 
-// Izmena Statusa
 app.post('/api/status', (req, res) => {
     const { id, status } = req.body;
     const data = readData();
+    if (!data.voznje) data.voznje = [];
+    
     const voznja = data.voznje.find(v => v.id === id);
     if (voznja) {
         voznja.status = status;
@@ -68,14 +73,15 @@ app.post('/api/status', (req, res) => {
     }
 });
 
-// Poruke
 app.get('/api/poruke', (req, res) => {
     const data = readData();
-    res.json(data.poruke);
+    res.json(data.poruke || []);
 });
 
 app.post('/api/poruke', (req, res) => {
     const data = readData();
+    if (!data.poruke) data.poruke = [];
+    
     const { posiljalac, vozilo, tekst } = req.body;
     const poruka = {
         id: Date.now(),
@@ -90,6 +96,7 @@ app.post('/api/poruke', (req, res) => {
     res.json({ success: true });
 });
 
-server.listen(3000, () => {
-    console.log('Server radi na portu 3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server radi na portu ${PORT}`);
 });
