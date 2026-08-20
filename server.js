@@ -7,6 +7,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const DATA_FILE = path.join(__dirname, 'baza_podataka.json');
+const BACKUP_FILE = path.join(__dirname, 'baza_podataka_backup.json');
 
 // Inicijalna struktura baze
 let baza = {
@@ -14,32 +15,61 @@ let baza = {
     poruke: []
 };
 
-// Učitavanje baze sa diska
-if (fs.existsSync(DATA_FILE)) {
+// Sigurno učitavanje baze sa diska
+function ucitajBazu() {
+    if (fs.existsSync(DATA_FILE)) {
+        try {
+            const raw = fs.readFileSync(DATA_FILE, 'utf8');
+            if (raw.trim().length > 0) {
+                baza = JSON.parse(raw);
+            }
+        } catch (e) {
+            console.error("⚠️ Greška pri čitanju baze! Pravim rezervnu kopiju oštećenog fajla...", e);
+            // Sačuvaj oštećeni fajl da ne propadnu podaci
+            fs.copyFileSync(DATA_FILE, path.join(__dirname, `baza_CORRUPTED_${Date.now()}.json`));
+            
+            // Pokušaj učitati iz backup-a ako postoji
+            if (fs.existsSync(BACKUP_FILE)) {
+                try {
+                    const rawBackup = fs.readFileSync(BACKUP_FILE, 'utf8');
+                    baza = JSON.parse(rawBackup);
+                    console.log("✅ Uspešno vraćena baza iz backup fajla!");
+                } catch(err) {
+                    console.error("Greška pri čitanju backup-a");
+                }
+            }
+        }
+    }
+    
+    if (!baza.voznje) baza.voznje = [];
+    if (!baza.poruke) baza.poruke = [];
+}
+
+// Učitaj odmah pri pokretanju
+ucitajBazu();
+
+function sacuvajBazu() {
     try {
-        const raw = fs.readFileSync(DATA_FILE, 'utf8');
-        baza = JSON.parse(raw);
-        if (!baza.voznje) baza.voznje = [];
-        if (!baza.poruke) baza.poruke = [];
+        const podaciGradja = JSON.stringify(baza, null, 2);
+        
+        // 1. Zapiši u glavni fajl
+        fs.writeFileSync(DATA_FILE, podaciGradja, 'utf8');
+        
+        // 2. Napravi automatski dupli backup fajl
+        fs.writeFileSync(BACKUP_FILE, podaciGradja, 'utf8');
     } catch (e) {
-        console.error("Greška pri čitanju baze:", e);
+        console.error("Greška pri čuvanju baze:", e);
     }
 }
 
-function sacuvajBazu() {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(baza, null, 2), 'utf8');
-}
-
-// Pomocna funkcija za dobijanje danasnjeg datuma u YYYY-MM-DD formatu
 function getDanasnjiDatum() {
     return new Date().toISOString().split('T')[0];
 }
 
 // ---------------- API RUTE ----------------
 
-// GET Vožnje (Aktivne na radnoj tabli)
+// GET Vožnje
 app.get('/api/voznje', (req, res) => {
-    // Vraćaju se samo vožnje koje nisu "Erledigt" ili su kreirane danas
     const danas = getDanasnjiDatum();
     const aktivne = baza.voznje.filter(v => v.status !== 'Erledigt' || v.datum === danas);
     res.json(aktivne);
@@ -80,10 +110,9 @@ app.post('/api/status', (req, res) => {
     }
 });
 
-// GET Poruke (Aktivni dnevni chat)
+// GET Poruke (Današnje)
 app.get('/api/poruke', (req, res) => {
     const danas = getDanasnjiDatum();
-    // Vraćaju se samo današnje poruke za aktivni chat
     const danasnjePoruke = baza.poruke.filter(p => p.datum === danas);
     res.json(danasnjePoruke);
 });
@@ -105,7 +134,7 @@ app.post('/api/poruke', (req, res) => {
     res.json({ success: true, poruka: novaPoruka });
 });
 
-// GET Historija (Arhiva vožnji i poruka po datumu)
+// GET Historija
 app.get('/api/historija', (req, res) => {
     const { datum, vozilo } = req.query;
 
@@ -132,9 +161,8 @@ app.get('/api/backup', (req, res) => {
     res.send(JSON.stringify(baza, null, 2));
 });
 
-// Reset za novi dan
+// Reset
 app.post('/api/reset', (req, res) => {
-    // Svi nedovršeni zadaci se prebacuju u Erledigt ili se osvežava prikaz
     sacuvajBazu();
     res.json({ success: true });
 });
