@@ -2,61 +2,132 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vukovic Krankentransporte - Fahrer App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fahrer App</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 15px; background: #f4f6f9; margin: 0; }
-        .header { background: #0d6efd; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
-        .header h2 { margin: 0; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #e5e5ea; margin: 0; padding: 0; color: #000; }
         
-        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 15px; font-weight: bold; }
-        
-        .card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #0d6efd; }
-        .card.infekcija { border-left-color: #dc3545; background: #fff5f5; }
-        
-        .btn-status { width: 100%; padding: 10px; margin-top: 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; }
-        .btn-offen { background: #ffc107; color: black; }
-        .btn-anfahrt { background: #0d6efd; }
-        .btn-patient { background: #fd7e14; }
-        .btn-ziel { background: #6f42c1; }
-        .btn-erledigt { background: #198754; }
+        /* Top Navigation Bar */
+        .top-bar { background: #d1d1d6; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #b2b2b7; font-size: 14px; }
+        .nav-arrows { display: flex; align-items: center; gap: 8px; }
+        .btn-nav-arrow { background: #e5e5ea; border: 1px solid #b2b2b7; padding: 3px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .status-badge { background: #ffcc00; color: #000; padding: 4px 12px; border-radius: 4px; font-weight: bold; border: 1px solid #d4a000; font-size: 13px; cursor: pointer; }
 
-        .chat-section { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .chat-box { height: 200px; overflow-y: auto; background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .chat-msg { padding: 8px; border-radius: 5px; font-size: 14px; max-width: 80%; }
+        /* Vehicle Selector */
+        .select-bar { background: #f2f2f7; padding: 8px 12px; border-bottom: 1px solid #c7c7cc; }
+        select { width: 100%; padding: 8px; font-size: 15px; border-radius: 6px; border: 1px solid #a0a0a5; font-weight: bold; }
+
+        /* Content Area */
+        .content { padding: 12px; max-width: 800px; margin: 0 auto; padding-bottom: 70px; }
+        
+        /* Table / Details Layout */
+        .detail-row { display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 10px; align-items: start; }
+        .label { color: #2c3e50; font-size: 18px; font-weight: normal; }
+        .value { color: #0000d6; font-size: 20px; font-weight: bold; word-break: break-word; }
+
+        .address-box { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .btn-nav-group { display: flex; flex-direction: column; gap: 6px; min-width: 100px; }
+        .btn-map { background: #e5e5ea; border: 1px solid #8e8e93; border-radius: 12px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; color: #000; }
+
+        /* Bottom Tab Bar */
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #f8f8f8; border-top: 1px solid #b2b2b7; display: flex; justify-content: space-around; padding: 8px 0 12px 0; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #8e8e93; text-decoration: none; cursor: pointer; width: 25%; }
+        .tab-item.active { color: #007aff; font-weight: bold; }
+        .tab-icon { font-size: 18px; margin-bottom: 2px; }
+
+        /* Status Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; text-align: center; }
+        .btn-status-option { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; }
+        .status-1 { background: #007aff; }
+        .status-2 { background: #ff9500; }
+        .status-3 { background: #5856d6; }
+        .status-4 { background: #34c759; }
+
+        /* Chat View */
+        .chat-container { display: none; background: white; border-radius: 8px; padding: 10px; height: calc(100vh - 160px); flex-direction: column; }
+        .chat-box { flex-grow: 1; overflow-y: auto; background: #f2f2f7; border: 1px solid #c7c7cc; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .chat-msg { padding: 8px 12px; border-radius: 8px; font-size: 14px; max-width: 80%; }
         .chat-msg.me { background: #d1e7dd; align-self: flex-end; }
-        .chat-msg.dispo { background: #f8d7da; align-self: flex-start; }
+        .chat-msg.dispo { background: #fff3cd; align-self: flex-start; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>FAHRER PANEL</h2>
+    <div class="top-bar">
+        <div class="nav-arrows">
+            <button class="btn-nav-arrow" onclick="prethodnaVoznja()">&lt;</button>
+            <span id="prikazIndeksa" style="font-size:13px;">1/1</span>
+            <button class="btn-nav-arrow" onclick="sledecaVoznja()">&gt;</button>
+        </div>
+        <div>
+            <button id="statusBtn" class="status-badge" onclick="otvoriModal()">1 Status</button>
+        </div>
     </div>
 
-    <label><b>Wählen Sie Ihr Fahrzeug:</b></label>
-    <select id="mojeVozilo" onchange="promeniVozilo()">
-        <option value="Fahrzeug 1">Fahrzeug 1</option>
-        <option value="Fahrzeug 2">Fahrzeug 2</option>
-        <option value="Fahrzeug 3">Fahrzeug 3</option>
-        <option value="Fahrzeug 4">Fahrzeug 4</option>
-        <option value="Fahrzeug 5">Fahrzeug 5</option>
-        <option value="Fahrzeug 6">Fahrzeug 6</option>
-        <option value="Fahrzeug 7">Fahrzeug 7</option>
-        <option value="Fahrzeug 8">Fahrzeug 8</option>
-        <option value="Fahrzeug 9">Fahrzeug 9</option>
-        <option value="Fahrzeug 10">Fahrzeug 10</option>
-    </select>
+    <div class="select-bar">
+        <select id="mojeVozilo" onchange="promeniVozilo()">
+            <option value="Fahrzeug 1">Fahrzeug 1</option>
+            <option value="Fahrzeug 2">Fahrzeug 2</option>
+            <option value="Fahrzeug 3">Fahrzeug 3</option>
+            <option value="Fahrzeug 4">Fahrzeug 4</option>
+            <option value="Fahrzeug 5">Fahrzeug 5</option>
+            <option value="Fahrzeug 6">Fahrzeug 6</option>
+            <option value="Fahrzeug 7">Fahrzeug 7</option>
+            <option value="Fahrzeug 8">Fahrzeug 8</option>
+            <option value="Fahrzeug 9">Fahrzeug 9</option>
+            <option value="Fahrzeug 10">Fahrzeug 10</option>
+        </select>
+    </div>
 
-    <h3>Meine Aufträge</h3>
-    <div id="listaNaloga"></div>
+    <!-- MAIN APP VIEW (EINSATZ) -->
+    <div id="einsatzView" class="content">
+        <div id="nalogPrikaz">
+            <p style="text-align:center; color:#8e8e93; margin-top:40px;">Keine aktiven Aufträge.</p>
+        </div>
+    </div>
 
-    <div class="chat-section">
-        <h3>💬 Chat mit Zentrale</h3>
-        <div id="chatBoxFahrer" class="chat-box"></div>
-        <div style="display:flex; gap:5px;">
-            <input type="text" id="chatInputFahrer" style="flex:1; padding:10px;" placeholder="Nachricht schreiben..." onkeypress="if(event.key==='Enter') posaljiPoruku()">
-            <button onclick="posaljiPoruku()" style="padding:10px 15px; background:#0d6efd; color:white; border:none; border-radius:5px; font-weight:bold;">Senden</button>
+    <!-- CHAT VIEW (MITTEILUNG) -->
+    <div id="mitteilungView" class="content" style="display:none;">
+        <div class="chat-container" id="chatContainer">
+            <div id="chatBoxFahrer" class="chat-box"></div>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="chatInputFahrer" style="flex:1; padding:10px; border-radius:6px; border:1px solid #ccc;" placeholder="Nachricht..." onkeypress="if(event.key==='Enter') posaljiPoruku()">
+                <button onclick="posaljiPoruku()" style="padding:10px 15px; background:#007aff; color:white; border:none; border-radius:6px; font-weight:bold;">Senden</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM TAB NAVIGATION -->
+    <div class="bottom-bar">
+        <div id="tabEinsatz" class="tab-item active" onclick="prikaziTab('einsatz')">
+            <span class="tab-icon">🧰</span>
+            <span>Einsatz</span>
+        </div>
+        <div id="tabMitteilung" class="tab-item" onclick="prikaziTab('mitteilung')">
+            <span class="tab-icon">💬</span>
+            <span>Mitteilung</span>
+        </div>
+        <div class="tab-item" onclick="prikaziTab('einsatz')">
+            <span class="tab-icon">📂</span>
+            <span>Verlauf</span>
+        </div>
+        <div class="tab-item" onclick="prikaziTab('einsatz')">
+            <span class="tab-icon">⚙️</span>
+            <span>Einstellungen</span>
+        </div>
+    </div>
+
+    <!-- STATUS SELECTION MODAL -->
+    <div id="statusModal" class="modal" onclick="zatvoriModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0;">Status ändern</h3>
+            <button class="btn-status-option status-1" onclick="postaviStatus('Anfahrt')">1. Anfahrt</button>
+            <button class="btn-status-option status-2" onclick="postaviStatus('Patient aufgenommen')">2. Patient aufgenommen</button>
+            <button class="btn-status-option status-3" onclick="postaviStatus('Am Ziel')">3. Am Ziel</button>
+            <button class="btn-status-option status-4" onclick="postaviStatus('Erledigt')">4. Erledigt</button>
+            <button onclick="zatvoriModal()" style="margin-top:10px; background:none; border:none; color:#8e8e93; font-weight:bold; cursor:pointer;">Abbrechen</button>
         </div>
     </div>
 
@@ -64,9 +135,13 @@
         let trenutnoVozilo = localStorage.getItem('izabranoVozilo') || 'Fahrzeug 1';
         document.getElementById('mojeVozilo').value = trenutnoVozilo;
 
+        let mojeVoznje = [];
+        let trenutniIndeks = 0;
+
         function promeniVozilo() {
             trenutnoVozilo = document.getElementById('mojeVozilo').value;
             localStorage.setItem('izabranoVozilo', trenutnoVozilo);
+            trenutniIndeks = 0;
             ucitajData();
         }
 
@@ -75,42 +150,8 @@
                 const resVoznje = await fetch('/api/voznje');
                 const voznje = await resVoznje.json();
 
-                const mojeVoznje = voznje.filter(v => v.vozilo === trenutnoVozilo);
-                const container = document.getElementById('listaNaloga');
-                container.innerHTML = '';
-
-                if(mojeVoznje.length === 0) {
-                    container.innerHTML = '<p style="color:#666;">Keine aktiven Aufträge.</p>';
-                }
-
-                mojeVoznje.forEach(v => {
-                    const isInfekt = v.infekcija === 'JA';
-                    const geb = v.datumRodjenja ? ` (${v.datumRodjenja})` : '';
-
-                    container.innerHTML += `
-                        <div class="card ${isInfekt ? 'infekcija' : ''}">
-                            <div style="display:flex; justify-content:space-between;">
-                                <b>Zeit: ${v.vreme || '-'}</b>
-                                <span style="color:${isInfekt ? 'red' : 'green'}; font-weight:bold;">${v.tipTransporta}</span>
-                            </div>
-                            <hr style="border:0.5px solid #eee;">
-                            <p style="margin:5px 0;"><b>Patient:</b> ${v.pacijent}${geb}</p>
-                            <p style="margin:5px 0;"><b>Kasse:</b> ${v.kasa || '-'}</p>
-                            <p style="margin:5px 0;"><b>Von:</b> ${v.adresaPolazak}</p>
-                            <p style="margin:5px 0;"><b>Nach:</b> ${v.adresaOdrediste || '-'}</p>
-                            ${v.napomena ? `<p style="margin:5px 0; color:#b02a37;"><b>Info:</b> ${v.napomena}</p>` : ''}
-                            ${isInfekt ? `<p style="margin:5px 0; color:red; font-weight:bold;">⚠️ INFEKTIONSFAHRT!</p>` : ''}
-                            
-                            <div style="margin-top:10px;">
-                                <small>Status ändern:</small>
-                                <button class="btn-status btn-anfahrt" onclick="promeniStatus(${v.id}, 'Anfahrt')">1. Anfahrt</button>
-                                <button class="btn-status btn-patient" onclick="promeniStatus(${v.id}, 'Patient aufgenommen')">2. Patient aufgenommen</button>
-                                <button class="btn-status btn-ziel" onclick="promeniStatus(${v.id}, 'Am Ziel')">3. Am Ziel</button>
-                                <button class="btn-status btn-erledigt" onclick="promeniStatus(${v.id}, 'Erledigt')">4. Erledigt</button>
-                            </div>
-                        </div>
-                    `;
-                });
+                mojeVoznje = voznje.filter(v => v.vozilo === trenutnoVozilo);
+                osveziPrikazNaloga();
 
                 // Učitavanje poruka
                 const resPoruke = await fetch('/api/poruke');
@@ -123,7 +164,7 @@
                     const isMe = p.posiljalac !== 'Zentrale';
                     chatBox.innerHTML += `
                         <div class="chat-msg ${isMe ? 'me' : 'dispo'}">
-                            <small>[${p.vreme}]</small> <b>${p.posiljalac}:</b> ${p.tekst}
+                            <small style="color:#666;">[${p.vreme}]</small> <b>${p.posiljalac}:</b> ${p.tekst}
                         </div>
                     `;
                 });
@@ -132,13 +173,118 @@
             } catch(e) {}
         }
 
-        async function promeniStatus(id, noviStatus) {
+        function osveziPrikazNaloga() {
+            const container = document.getElementById('nalogPrikaz');
+            const indeksSpan = document.getElementById('prikazIndeksa');
+
+            if(mojeVoznje.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#8e8e93; margin-top:40px;">Keine aktiven Aufträge.</p>';
+                indeksSpan.innerText = "0/0";
+                return;
+            }
+
+            if(trenutniIndeks >= mojeVoznje.length) trenutniIndeks = mojeVoznje.length - 1;
+            if(trenutniIndeks < 0) trenutniIndeks = 0;
+
+            indeksSpan.innerText = `${trenutniIndeks + 1}/${mojeVoznje.length}`;
+            const v = mojeVoznje[trenutniIndeks];
+
+            document.getElementById('statusBtn').innerText = `${v.status}`;
+
+            container.innerHTML = `
+                <div class="detail-row"><div class="label">Art</div><div class="value">${v.tipTransporta || '1'}</div></div>
+                <div class="detail-row"><div class="label">Überm.</div><div class="value">${v.datum || ''} ${v.vreme || ''} Uhr</div></div>
+                <div class="detail-row"><div class="label">Nr.</div><div class="value">${v.id}</div></div>
+                <div class="detail-row"><div class="label">Datum</div><div class="value">${v.datum || ''}</div></div>
+                <div class="detail-row"><div class="label">Zeit</div><div class="value">${v.vreme || '00:00'}</div></div>
+                <div class="detail-row"><div class="label">Prio</div><div class="value"></div></div>
+                <div class="detail-row"><div class="label">Name</div><div class="value">${v.pacijent || '-'}</div></div>
+                <div class="detail-row"><div class="label">Geburt</div><div class="value">${v.datumRodjenja || 'k.A.'}</div></div>
+                
+                <div class="detail-row">
+                    <div class="label">Von</div>
+                    <div class="address-box">
+                        <div class="value">${v.adresaPolazak}</div>
+                        <div class="btn-nav-group">
+                            <button class="btn-map" onclick="otvoriMapu('${v.adresaPolazak}', 'google')">NAV</button>
+                            <button class="btn-map" onclick="otvoriMapu('${v.adresaPolazak}', 'apple')">Apple Maps</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row" style="margin-top:15px;">
+                    <div class="label">Nach</div>
+                    <div class="address-box">
+                        <div class="value">${v.adresaOdrediste || '-'}</div>
+                        <div class="btn-nav-group">
+                            <button class="btn-map" onclick="otvoriMapu('${v.adresaOdrediste}', 'google')">NAV</button>
+                            <button class="btn-map" onclick="otvoriMapu('${v.adresaOdrediste}', 'apple')">Apple Maps</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row" style="margin-top:15px;"><div class="label">Grund</div><div class="value">${v.grund || '-'}</div></div>
+                <div class="detail-row"><div class="label">L/S</div><div class="value">---</div></div>
+                <div class="detail-row"><div class="label">Med.Ger.</div><div class="value"></div></div>
+                <div class="detail-row"><div class="label">Komm.</div><div class="value">${v.napomena || '-'}</div></div>
+                <div class="detail-row"><div class="label">Kr.kasse</div><div class="value">${v.kasa || '-'}</div></div>
+            `;
+        }
+
+        function prethodnaVoznja() {
+            if(trenutniIndeks > 0) {
+                trenutniIndeks--;
+                osveziPrikazNaloga();
+            }
+        }
+
+        function sledecaVoznja() {
+            if(trenutniIndeks < mojeVoznje.length - 1) {
+                trenutniIndeks++;
+                osveziPrikazNaloga();
+            }
+        }
+
+        function otvoriMapu(adresa, tip) {
+            if(!adresa || adresa === '-') return;
+            const enc = encodeURIComponent(adresa);
+            if(tip === 'apple') {
+                window.open(`http://maps.apple.com/?q=${enc}`, '_blank');
+            } else {
+                window.open(`https://www.google.com/maps/search/?api=1&query=${enc}`, '_blank');
+            }
+        }
+
+        function otvoriModal() {
+            if(mojeVoznje.length > 0) {
+                document.getElementById('statusModal').style.display = 'flex';
+            }
+        }
+
+        function zatvoriModal() {
+            document.getElementById('statusModal').style.display = 'none';
+        }
+
+        async function postaviStatus(noviStatus) {
+            zatvoriModal();
+            if(!mojeVoznje[trenutniIndeks]) return;
+            
+            const id = mojeVoznje[trenutniIndeks].id;
             await fetch('/api/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, status: noviStatus })
             });
             ucitajData();
+        }
+
+        function prikaziTab(tab) {
+            document.getElementById('einsatzView').style.display = tab === 'einsatz' ? 'block' : 'none';
+            document.getElementById('mitteilungView').style.display = tab === 'mitteilung' ? 'block' : 'none';
+            document.getElementById('chatContainer').style.display = tab === 'mitteilung' ? 'flex' : 'none';
+
+            document.getElementById('tabEinsatz').classList.toggle('active', tab === 'einsatz');
+            document.getElementById('tabMitteilung').classList.toggle('active', tab === 'mitteilung');
         }
 
         async function posaljiPoruku() {
