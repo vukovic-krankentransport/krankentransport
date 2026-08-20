@@ -1,30 +1,37 @@
 <!DOCTYPE html>
-<html lang="sr">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vozač - Krankentransport</title>
+    <title>Vukovic Krankentransporte - Fahrer App</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 15px; background: #f4f4f9; margin: 0; }
+        .header { background: #b02a37; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        .header h2 { margin: 0; font-size: 20px; }
         .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 15px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; background-color: #007bff; }
+        select { width: 100%; padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 12px; margin-top: 8px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; background-color: #0d6efd; }
         .btn.active { background-color: #6c757d !important; cursor: not-allowed; }
         .info { font-size: 15px; color: #333; margin-bottom: 6px; }
-        .nav-link { display: inline-block; background: #17a2b8; color: white; text-decoration: none; padding: 8px 12px; border-radius: 5px; font-weight: bold; margin-top: 5px; margin-bottom: 5px; }
-        .badge-infekcija { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .nav-link { display: inline-block; background: #0dcaf0; color: #000; text-decoration: none; padding: 10px 14px; border-radius: 5px; font-weight: bold; margin-top: 5px; margin-bottom: 5px; }
+        .badge-infektion { background: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .badge-transport { background: #6c757d; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>Aplikacija za Vozača</h2>
+    <div class="header">
+        <h2>VUKOVIC KRANKENTRANSPORTE</h2>
+        <small>Fahrer-Anwendung</small>
+    </div>
+
     <div class="card">
-        <label><b>Izaberite vaše vozilo:</b></label>
+        <label><b>Fahrzeug auswählen:</b></label>
         <select id="voziloSelect" onchange="snimiVozilo()">
-            <option value="">-- Izaberi vozilo --</option>
+            <option value="">-- Fahrzeug wählen --</option>
             <script>
                 for(let i=1; i<=10; i++) {
-                    document.write(`<option value="Vozilo ${i}">Vozilo ${i}</option>`);
+                    document.write(`<option value="Fahrzeug ${i}">Fahrzeug ${i}</option>`);
                 }
             </script>
         </select>
@@ -48,7 +55,7 @@
             const kontejner = document.getElementById('voznjeKontejner');
 
             if(!mojeVozilo) {
-                kontejner.innerHTML = '<div class="card"><p>Izaberite broj vozila iznad.</p></div>';
+                kontejner.innerHTML = '<div class="card"><p>Bitte wählen Sie oben Ihr Fahrzeug aus.</p></div>';
                 return;
             }
 
@@ -56,10 +63,10 @@
             const podaci = await res.json();
             kontejner.innerHTML = '';
 
-            const mojeVoznje = podaci.filter(v => v.vozilo === mojeVozilo && v.status !== 'Završeno');
+            const mojeVoznje = podaci.filter(v => v.vozilo === mojeVozilo && v.status !== 'Erledigt');
 
             if(mojeVoznje.length === 0) {
-                kontejner.innerHTML = '<div class="card"><p>Nema aktivnih naloga za vaše vozilo.</p></div>';
+                kontejner.innerHTML = '<div class="card"><p>Keine aktiven Aufträge für Ihr Fahrzeug.</p></div>';
                 return;
             }
 
@@ -69,24 +76,25 @@
 
                 kontejner.innerHTML += `
                     <div class="card">
-                        <h3>Pacijent: ${v.pacijent}</h3>
-                        <p class="info"><b>Kasa / Osiguranje:</b> ${v.kasa || 'Nije navedeno'}</p>
-                        <p class="info"><b>Vreme preuzimanja:</b> <span style="color:red; font-weight:bold;">${v.vreme || 'Hitno'}</span></p>
-                        <p class="info"><b>Infekcija:</b> ${v.infekcija === 'DA' ? '<span class="badge-infekcija">DA (Oprez!)</span>' : 'NE'}</p>
+                        <h3>Auftrag #${v.id} - Patient: ${v.pacijent}</h3>
+                        <p class="info"><b>Krankenkasse:</b> ${v.kasa || 'Nicht angegeben'}</p>
+                        <p class="info"><b>Abholzeit:</b> <span style="color:red; font-weight:bold;">${v.vreme || 'Sofort'}</span> (${v.datum})</p>
+                        <p class="info"><b>Transportart:</b> <span class="badge-transport">${v.tipTransporta || 'Sitzend'}</span></p>
+                        <p class="info"><b>Infektionsfahrt:</b> ${v.infekcija === 'JA' ? '<span class="badge-infektion">JA (Achtung!)</span>' : 'NEIN'}</p>
                         <hr>
-                        <p class="info"><b>Polazak:</b> ${v.adresaPolazak}</p>
-                        <a href="${mapsPolazak}" target="_blank" class="nav-link">📍 Navigacija do polaska</a>
+                        <p class="info"><b>Abholung:</b> ${v.adresaPolazak}</p>
+                        <a href="${mapsPolazak}" target="_blank" class="nav-link">📍 Navigation zur Abholung</a>
                         
-                        <p class="info" style="margin-top:10px;"><b>Odredište:</b> ${v.adresaOdrediste || 'Nije navedeno'}</p>
-                        ${v.adresaOdrediste ? `<a href="${mapsOdrediste}" target="_blank" class="nav-link">🏁 Navigacija do odredišta</a>` : ''}
+                        <p class="info" style="margin-top:10px;"><b>Ziel:</b> ${v.adresaOdrediste || 'Nicht angegeben'}</p>
+                        ${v.adresaOdrediste ? `<a href="${mapsOdrediste}" target="_blank" class="nav-link">🏁 Navigation zum Ziel</a>` : ''}
                         
-                        <p class="info" style="margin-top:10px;"><b>Napomena:</b> ${v.napomena || 'Nema'}</p>
+                        <p class="info" style="margin-top:10px;"><b>Hinweis:</b> ${v.napomena || 'Keine'}</p>
                         <hr>
-                        <button class="btn ${v.status === 'Prihvaćeno' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Prihvaćeno')">1. Prihvaćeno</button>
-                        <button class="btn ${v.status === 'Na adresi' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Na adresi')">2. Na adresi</button>
-                        <button class="btn ${v.status === 'Pacijent u vozilu' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Pacijent u vozilu')">3. Pacijent u vozilu</button>
-                        <button class="btn ${v.status === 'Predat pacijent' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Predat pacijent')">4. Predat pacijent</button>
-                        <button class="btn ${v.status === 'Završeno' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Završeno')">5. Završeno (Skloni nalog)</button>
+                        <button class="btn ${v.status === 'Angenommen' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Angenommen')">1. Angenommen</button>
+                        <button class="btn ${v.status === 'An der Adresse' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'An der Adresse')">2. An der Adresse</button>
+                        <button class="btn ${v.status === 'Patient im Fahrzeug' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Patient im Fahrzeug')">3. Patient im Fahrzeug</button>
+                        <button class="btn ${v.status === 'Patient übergeben' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Patient übergeben')">4. Patient übergeben</button>
+                        <button class="btn ${v.status === 'Erledigt' ? 'active' : ''}" onclick="promeniStatus(${v.id}, 'Erledigt')">5. Erledigt (Auftrag abschließen)</button>
                     </div>
                 `;
             });
