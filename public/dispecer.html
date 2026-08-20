@@ -9,7 +9,7 @@
         .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: bold; margin-bottom: 4px; font-size: 13px; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { background: #007aff; color: white; border: none; padding: 10px; border-radius: 4px; width: 100%; font-weight: bold; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
@@ -67,7 +67,7 @@
             </div>
             <div class="form-group">
                 <label>Grund</label>
-                <input type="text" id="grund" placeholder="npr. KH Neuperlach / Dialyse">
+                <input type="text" id="grund" placeholder="Svrha transporta...">
             </div>
             <button type="submit">Auftrag Senden</button>
         </form>
@@ -95,28 +95,30 @@
 
 <script>
     async function ucitajVoznje() {
-        const res = await fetch('/api/voznje');
-        const voznje = await res.json();
-        const tbody = document.getElementById('tabelaVoznji');
-        tbody.innerHTML = '';
+        try {
+            const res = await fetch('/api/voznje');
+            const voznje = await res.json();
+            const tbody = document.getElementById('tabelaVoznji');
+            tbody.innerHTML = '';
 
-        voznje.filter(v => v.status !== 'Frei' && v.status !== 'Erledigt').forEach(v => {
-            let badgeClass = 'st-1';
-            if(v.status === 'Status 2') badgeClass = 'st-2';
-            if(v.status === 'Status 3') badgeClass = 'st-3';
-            if(v.status === 'Status 4') badgeClass = 'st-4';
+            voznje.filter(v => v.status !== 'Frei' && v.status !== 'Erledigt' && v.status !== 'Status 5').forEach(v => {
+                let badgeClass = 'st-1';
+                if(v.status === 'Status 2') badgeClass = 'st-2';
+                if(v.status === 'Status 3') badgeClass = 'st-3';
+                if(v.status === 'Status 4') badgeClass = 'st-4';
 
-            tbody.innerHTML += `
-                <tr>
-                    <td><b>#${v.id}</b></td>
-                    <td>${v.vozilo}</td>
-                    <td>${v.pacijent}<br><small>${v.datumRodjenja || ''}</small></td>
-                    <td>${v.adresaPolazak}<br>➔ ${v.adresaOdrediste}</td>
-                    <td><b>${v.grund || '-'}</b></td>
-                    <td><span class="badge ${badgeClass}">${v.status}</span></td>
-                </tr>
-            `;
-        });
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>#${v.id}</b></td>
+                        <td>${v.vozilo}</td>
+                        <td>${v.pacijent}<br><small>${v.datumRodjenja || ''}</small></td>
+                        <td>${v.adresaPolazak}<br>➔ ${v.adresaOdrediste}</td>
+                        <td><b>${v.grund || '-'}</b></td>
+                        <td><span class="badge ${badgeClass}">${v.status}</span></td>
+                    </tr>
+                `;
+            });
+        } catch(e) {}
     }
 
     document.getElementById('auftragForm').addEventListener('submit', async (e) => {
