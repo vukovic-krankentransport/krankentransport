@@ -72,14 +72,12 @@
         </select>
     </div>
 
-    <!-- MAIN APP VIEW (EINSATZ) -->
     <div id="einsatzView" class="content">
         <div id="nalogPrikaz">
             <p style="text-align:center; color:#8e8e93; margin-top:40px;">Keine aktiven Aufträge.</p>
         </div>
     </div>
 
-    <!-- CHAT VIEW (MITTEILUNG) -->
     <div id="mitteilungView" class="content" style="display:none;">
         <div class="chat-container" id="chatContainer">
             <div id="chatBoxFahrer" class="chat-box"></div>
@@ -90,13 +88,11 @@
         </div>
     </div>
 
-    <!-- VERLAUF VIEW -->
     <div id="verlaufView" class="content" style="display:none;">
         <h3 style="margin-top:0;">Verlauf (Erledigte Aufträge)</h3>
         <div id="verlaufList"></div>
     </div>
 
-    <!-- BOTTOM TAB NAVIGATION -->
     <div class="bottom-bar">
         <div id="tabEinsatz" class="tab-item active" onclick="prikaziTab('einsatz')">
             <span class="tab-icon">🧰</span>
@@ -112,7 +108,6 @@
         </div>
     </div>
 
-    <!-- STATUS SELECTION MODAL -->
     <div id="statusModal" class="modal" onclick="zatvoriModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="margin-top:0;">Status ändern</h3>
