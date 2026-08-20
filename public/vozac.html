@@ -7,31 +7,25 @@
     <style>
         body { font-family: Arial, sans-serif; background: #dcdcd3; margin: 0; padding: 10px; color: #000; }
         
-        /* Top Navigation Bar */
         .top-bar { display: flex; justify-content: space-between; align-items: center; background: #e6e6de; padding: 6px 12px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #ccc; }
         .vehicle-select { font-weight: bold; font-size: 14px; padding: 4px; }
         .btn-status-top { background: #4a90e2; color: white; border: none; padding: 8px 16px; font-weight: bold; font-size: 14px; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .btn-status-top:active { background: #357abd; }
-
-        /* Card Container styled like the tablet screen */
-        .einsatz-card { background: #ecece3; border: 1px solid #bbb; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
+        .einsatz-card { background: #ecece3; border: 1px solid #bbb; border-radius: 8px; padding: 15px; margin-bottom: 15px; font-size: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .row { display: flex; margin-bottom: 8px; align-items: flex-start; }
         .label { width: 90px; font-weight: bold; color: #55547e; flex-shrink: 0; }
         .value { color: #0000aa; font-weight: bold; flex-grow: 1; word-break: break-word; }
         .value-text { color: #000; font-weight: normal; }
 
-        /* Navigation Buttons */
         .nav-btn-group { display: flex; gap: 5px; margin-left: 10px; flex-shrink: 0; }
         .btn-nav { background: #d0d0c8; border: 1px solid #999; border-radius: 12px; padding: 4px 10px; font-size: 11px; font-weight: bold; color: #333; text-decoration: none; cursor: pointer; }
-        .btn-nav:hover { background: #bbb; }
 
-        /* Chat Section */
         .chat-section { background: white; border-radius: 8px; padding: 12px; border: 1px solid #ccc; margin-top: 15px; }
         .chat-header { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         .chat-box { height: 120px; overflow-y: auto; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
-        .chat-msg { background: #e1f5fe; padding: 6px 10px; border-radius: 6px; max-width: 80%; font-size: 13px; }
+        .chat-msg { background: #e1f5fe; padding: 6px 10px; border-radius: 6px; max-width: 85%; font-size: 13px; }
         .chat-msg.self { background: #e8f5e9; align-self: flex-end; }
+        .chat-msg.zentrale { background: #f8d7da; border: 1px solid #f5c2c7; align-self: flex-start; }
         .chat-input-group { display: flex; gap: 6px; }
         .chat-input { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
         .btn-send { background: #198754; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
@@ -39,10 +33,9 @@
 </head>
 <body>
 
-    <!-- TOP CONTROL BAR -->
     <div class="top-bar">
         <div>
-            <select id="voziloSelect" class="vehicle-select" onchange="snimiVozilo()">
+            <select id="voziloSelect" class="vehicle-select" onchange="promenaVozila()">
                 <option value="">-- Fahrzeug wählen --</option>
                 <script>
                     for(let i=1; i<=10; i++) {
@@ -51,20 +44,14 @@
                 </script>
             </select>
         </div>
-        <div id="statusBtnContainer">
-            <!-- Dynamic Status Button will render here -->
-        </div>
+        <div id="statusBtnContainer"></div>
     </div>
 
-    <!-- MAIN CONTENT AREA -->
     <div id="voznjeKontejner"></div>
 
-    <!-- CHAT WITH DISPATCH CENTER -->
     <div class="chat-section">
         <div class="chat-header">💬 Mitteilung an Zentrale (Dispo)</div>
-        <div id="chatBox" class="chat-box">
-            <div class="chat-msg">System: Bereit für Nachrichten.</div>
-        </div>
+        <div id="chatBox" class="chat-box"></div>
         <div class="chat-input-group">
             <input type="text" id="chatInput" class="chat-input" placeholder="Nachricht schreiben..." onkeypress="if(event.key==='Enter') posaljiPoruku()">
             <button class="btn-send" onclick="posaljiPoruku()">Senden</button>
@@ -72,23 +59,25 @@
     </div>
 
     <script>
-        // Definition sequence of statuses
         const STATUS_STAGES = [
-            { code: 1, label: "1 Status (Auftrag annehmen)", statusText: "Angenommen" },
-            { code: 2, label: "2 Status (An der Adresse)", statusText: "An der Adresse" },
-            { code: 3, label: "3 Status (Patient im Fahrzeug)", statusText: "Patient im Fahrzeug" },
-            { code: 4, label: "4 Status (Patient übergeben)", statusText: "Patient übergeben" },
-            { code: 5, label: "5 Status (Erledigt)", statusText: "Erledigt" }
+            { code: 1, statusText: "Angenommen" },
+            { code: 2, statusText: "An der Adresse" },
+            { code: 3, statusText: "Patient im Fahrzeug" },
+            { code: 4, statusText: "Patient übergeben" },
+            { code: 5, statusText: "Erledigt" }
         ];
+
+        let aktivniNalogId = null;
 
         if(localStorage.getItem('izabranoVozilo')) {
             document.getElementById('voziloSelect').value = localStorage.getItem('izabranoVozilo');
         }
 
-        function snimiVozilo() {
+        function promenaVozila() {
             const val = document.getElementById('voziloSelect').value;
             localStorage.setItem('izabranoVozilo', val);
             ucitajVoznje();
+            ucitajPoruke();
         }
 
         async function ucitajVoznje() {
@@ -102,84 +91,63 @@
                 return;
             }
 
-            const res = await fetch('/api/voznje');
-            const podaci = await res.json();
-            
-            const mojeVoznje = podaci.filter(v => v.vozilo === mojeVozilo && v.status !== 'Erledigt');
+            try {
+                const res = await fetch('/api/voznje');
+                const podaci = await res.json();
+                const mojeVoznje = podaci.filter(v => v.vozilo === mojeVozilo && v.status !== 'Erledigt');
 
-            if(mojeVoznje.length === 0) {
-                kontejner.innerHTML = '<div class="einsatz-card"><p>Kein aktiver Einsatz für dieses Fahrzeug.</p></div>';
-                btnContainer.innerHTML = '<button class="btn-status-top" disabled>Kein Einsatz</button>';
-                return;
+                if(mojeVoznje.length === 0) {
+                    kontejner.innerHTML = '<div class="einsatz-card"><p>Kein aktiver Einsatz für dieses Fahrzeug.</p></div>';
+                    btnContainer.innerHTML = '<button class="btn-status-top" disabled>Kein Einsatz</button>';
+                    aktivniNalogId = null;
+                    return;
+                }
+
+                const tv = mojeVoznje[0];
+                aktivniNalogId = tv.id;
+                renderStatusButton(tv);
+
+                const mapsPolazak = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tv.adresaPolazak)}`;
+                const mapsOdrediste = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tv.adresaOdrediste)}`;
+
+                kontejner.innerHTML = `
+                    <div class="einsatz-card">
+                        <div class="row"><div class="label">Art</div><div class="value">${tv.tipTransporta || '1'}</div></div>
+                        <div class="row"><div class="label">Überm.</div><div class="value">${tv.datum} ${tv.vreme || '00:00'} Uhr</div></div>
+                        <div class="row"><div class="label">Nr.</div><div class="value">${tv.id}</div></div>
+                        <div class="row"><div class="label">Datum</div><div class="value">${tv.datum}</div></div>
+                        <div class="row"><div class="label">Zeit</div><div class="value">${tv.vreme || '00:00'}</div></div>
+                        <div class="row"><div class="label">Prio</div><div class="value-text">${tv.infekcija === 'JA' ? '🔴 INFEKTION' : 'Normal'}</div></div>
+                        <div class="row"><div class="label">Name</div><div class="value">${tv.pacijent}</div></div>
+                        <div class="row"><div class="label">Geburt</div><div class="value-text">k.A.</div></div>
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="label">Von</div>
+                            <div class="value">${tv.adresaPolazak}</div>
+                            <div class="nav-btn-group"><a href="${mapsPolazak}" target="_blank" class="btn-nav">NAV</a></div>
+                        </div>
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="label">Nach</div>
+                            <div class="value">${tv.adresaOdrediste || '-'}</div>
+                            <div class="nav-btn-group">${tv.adresaOdrediste ? `<a href="${mapsOdrediste}" target="_blank" class="btn-nav">NAV</a>` : ''}</div>
+                        </div>
+                        <div class="row" style="margin-top: 10px;"><div class="label">Grund</div><div class="value">${tv.napomena || 'Krankentransport'}</div></div>
+                        <div class="row"><div class="label">L/S</div><div class="value">${tv.tipTransporta || 'Sitzend'}</div></div>
+                        <div class="row"><div class="label">Kr.kasse</div><div class="value-text">${tv.kasa || '-'}</div></div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error("Greska pri ucitavanju voznji:", err);
             }
-
-            const trenutnaVoznja = mojeVoznje[0]; // Take the current active job
-
-            // Render top dynamic status button
-            renderStatusButton(trenutnaVoznja);
-
-            // Render Google Maps links
-            const mapsPolazak = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trenutnaVoznja.adresaPolazak)}`;
-            const mapsOdrediste = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(trenutnaVoznja.adresaOdrediste)}`;
-
-            // Display in exact tablet format
-            kontejner.innerHTML = `
-                <div class="einsatz-card">
-                    <div class="row"><div class="label">Art</div><div class="value">${trenutnaVoznja.tipTransporta || '1'}</div></div>
-                    <div class="row"><div class="label">Überm.</div><div class="value">${trenutnaVoznja.datum} ${trenutnaVoznja.vreme || '00:00'} Uhr</div></div>
-                    <div class="row"><div class="label">Nr.</div><div class="value">${trenutnaVoznja.id}</div></div>
-                    <div class="row"><div class="label">Datum</div><div class="value">${trenutnaVoznja.datum}</div></div>
-                    <div class="row"><div class="label">Zeit</div><div class="value">${trenutnaVoznja.vreme || '00:00'}</div></div>
-                    <div class="row"><div class="label">Prio</div><div class="value-text">${trenutnaVoznja.infekcija === 'JA' ? '🔴 INFEKTION' : 'Normal'}</div></div>
-                    <div class="row"><div class="label">Name</div><div class="value">${trenutnaVoznja.pacijent}</div></div>
-                    <div class="row"><div class="label">Geburt</div><div class="value-text">k.A.</div></div>
-                    
-                    <div class="row" style="margin-top: 10px;">
-                        <div class="label">Von</div>
-                        <div class="value">
-                            ${trenutnaVoznja.adresaPolazak}
-                        </div>
-                        <div class="nav-btn-group">
-                            <a href="${mapsPolazak}" target="_blank" class="btn-nav">NAV</a>
-                        </div>
-                    </div>
-
-                    <div class="row" style="margin-top: 10px;">
-                        <div class="label">Nach</div>
-                        <div class="value">
-                            ${trenutnaVoznja.adresaOdrediste || '-'}
-                        </div>
-                        <div class="nav-btn-group">
-                            ${trenutnaVoznja.adresaOdrediste ? `<a href="${mapsOdrediste}" target="_blank" class="btn-nav">NAV</a>` : ''}
-                        </div>
-                    </div>
-
-                    <div class="row" style="margin-top: 10px;"><div class="label">Grund</div><div class="value">${trenutnaVoznja.napomena || 'Krankentransport'}</div></div>
-                    <div class="row"><div class="label">L/S</div><div class="value">${trenutnaVoznja.tipTransporta || 'Sitzend'}</div></div>
-                    <div class="row"><div class="label">Kr.kasse</div><div class="value-text">${trenutnaVoznja.kasa || '-'}</div></div>
-                </div>
-            `;
         }
 
         function renderStatusButton(voznja) {
             const btnContainer = document.getElementById('statusBtnContainer');
-            
-            // Find current status index
             let currentIndex = STATUS_STAGES.findIndex(s => s.statusText === voznja.status);
-            let nextIndex = currentIndex + 1;
-
-            if (currentIndex === -1) {
-                // Initial status (Erteilt / Assigned)
-                nextIndex = 0;
-            }
+            let nextIndex = currentIndex === -1 ? 0 : currentIndex + 1;
 
             if (nextIndex < STATUS_STAGES.length) {
                 const nextStage = STATUS_STAGES[nextIndex];
-                btnContainer.innerHTML = `
-                    <button class="btn-status-top" onclick="promeniStatus(${voznja.id}, '${nextStage.statusText}')">
-                        ${nextStage.code} Status
-                    </button>
-                `;
+                btnContainer.innerHTML = `<button class="btn-status-top" onclick="promeniStatus(${voznja.id}, '${nextStage.statusText}')">${nextStage.code} Status</button>`;
             } else {
                 btnContainer.innerHTML = `<button class="btn-status-top" style="background:#28a745;">Abgeschlossen</button>`;
             }
@@ -194,19 +162,54 @@
             ucitajVoznje();
         }
 
-        function posaljiPoruku() {
-            const input = document.getElementById('chatInput');
-            const msg = input.value.trim();
-            if(!msg) return;
+        async function ucitajPoruke() {
+            const mojeVozilo = localStorage.getItem('izabranoVozilo');
+            if(!mojeVozilo) return;
 
-            const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML += `<div class="chat-msg self"><b>Ich:</b> ${msg}</div>`;
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
+            try {
+                const res = await fetch('/api/poruke');
+                const poruke = await res.json();
+                const box = document.getElementById('chatBox');
+                box.innerHTML = '';
+
+                poruke.forEach(p => {
+                    const isDispo = p.posiljalac === 'Zentrale';
+                    const msgClass = isDispo ? 'chat-msg zentrale' : 'chat-msg self';
+                    box.innerHTML += `
+                        <div class="${msgClass}">
+                            <b>${p.posiljalac}:</b> ${p.tekst}
+                        </div>
+                    `;
+                });
+                box.scrollTop = box.scrollHeight;
+            } catch (err) {
+                console.error("Greska pri ucitavanju poruka:", err);
+            }
         }
 
-        setInterval(ucitajVoznje, 4000);
+        async function posaljiPoruku() {
+            const input = document.getElementById('chatInput');
+            const tekst = input.value.trim();
+            const mojeVozilo = localStorage.getItem('izabranoVozilo') || 'Fahrzeug 1';
+
+            if(!tekst) return;
+
+            await fetch('/api/poruke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ posiljalac: mojeVozilo, vozilo: mojeVozilo, tekst })
+            });
+
+            input.value = '';
+            ucitajPoruke();
+        }
+
+        // Odvojeno osvezavanje za voznje i za chat
+        setInterval(ucitajVoznje, 5000);
+        setInterval(ucitajPoruke, 3000);
+
         ucitajVoznje();
+        ucitajPoruke();
     </script>
 </body>
 </html>
