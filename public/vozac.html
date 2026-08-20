@@ -8,16 +8,20 @@
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #e5e5ea; margin: 0; padding: 0; color: #000; }
         
+        /* Top Navigation Bar */
         .top-bar { background: #d1d1d6; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #b2b2b7; font-size: 14px; }
         .nav-arrows { display: flex; align-items: center; gap: 8px; }
         .btn-nav-arrow { background: #e5e5ea; border: 1px solid #b2b2b7; padding: 3px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .status-badge { background: #ffcc00; color: #000; padding: 4px 12px; border-radius: 4px; font-weight: bold; border: 1px solid #d4a000; font-size: 13px; cursor: pointer; }
 
+        /* Vehicle Selector */
         .select-bar { background: #f2f2f7; padding: 8px 12px; border-bottom: 1px solid #c7c7cc; }
         select { width: 100%; padding: 8px; font-size: 15px; border-radius: 6px; border: 1px solid #a0a0a5; font-weight: bold; }
 
+        /* Content Area */
         .content { padding: 12px; max-width: 800px; margin: 0 auto; padding-bottom: 70px; }
         
+        /* Table / Details Layout */
         .detail-row { display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 10px; align-items: start; }
         .label { color: #2c3e50; font-size: 18px; font-weight: normal; }
         .value { color: #0000d6; font-size: 20px; font-weight: bold; word-break: break-word; }
@@ -26,27 +30,27 @@
         .btn-nav-group { display: flex; flex-direction: column; gap: 6px; min-width: 100px; }
         .btn-map { background: #e5e5ea; border: 1px solid #8e8e93; border-radius: 12px; padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; text-align: center; color: #000; }
 
+        /* Bottom Tab Bar */
         .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #f8f8f8; border-top: 1px solid #b2b2b7; display: flex; justify-content: space-around; padding: 8px 0 12px 0; }
-        .tab-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #8e8e93; text-decoration: none; cursor: pointer; width: 33%; }
+        .tab-item { display: flex; flex-direction: column; align-items: center; font-size: 11px; color: #8e8e93; text-decoration: none; cursor: pointer; width: 25%; }
         .tab-item.active { color: #007aff; font-weight: bold; }
         .tab-icon { font-size: 18px; margin-bottom: 2px; }
 
+        /* Status Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
         .modal-content { background: white; padding: 20px; border-radius: 12px; width: 85%; max-width: 350px; text-align: center; }
         .btn-status-option { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; color: white; }
         .status-1 { background: #007aff; }
         .status-2 { background: #ff9500; }
         .status-3 { background: #5856d6; }
-        .status-4 { background: #af52de; }
-        .status-5 { background: #34c759; }
+        .status-4 { background: #34c759; }
 
+        /* Chat View */
         .chat-container { display: none; background: white; border-radius: 8px; padding: 10px; height: calc(100vh - 160px); flex-direction: column; }
         .chat-box { flex-grow: 1; overflow-y: auto; background: #f2f2f7; border: 1px solid #c7c7cc; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
         .chat-msg { padding: 8px 12px; border-radius: 8px; font-size: 14px; max-width: 80%; }
         .chat-msg.me { background: #d1e7dd; align-self: flex-end; }
         .chat-msg.dispo { background: #fff3cd; align-self: flex-start; }
-
-        .verlauf-card { background: white; padding: 12px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #c7c7cc; }
     </style>
 </head>
 <body>
@@ -58,7 +62,7 @@
             <button class="btn-nav-arrow" onclick="sledecaVoznja()">&gt;</button>
         </div>
         <div>
-            <button id="statusBtn" class="status-badge" onclick="otvoriModal()">Status 1</button>
+            <button id="statusBtn" class="status-badge" onclick="otvoriModal()">1 Status</button>
         </div>
     </div>
 
@@ -69,15 +73,22 @@
             <option value="Fahrzeug 3">Fahrzeug 3</option>
             <option value="Fahrzeug 4">Fahrzeug 4</option>
             <option value="Fahrzeug 5">Fahrzeug 5</option>
+            <option value="Fahrzeug 6">Fahrzeug 6</option>
+            <option value="Fahrzeug 7">Fahrzeug 7</option>
+            <option value="Fahrzeug 8">Fahrzeug 8</option>
+            <option value="Fahrzeug 9">Fahrzeug 9</option>
+            <option value="Fahrzeug 10">Fahrzeug 10</option>
         </select>
     </div>
 
+    <!-- MAIN APP VIEW (EINSATZ) -->
     <div id="einsatzView" class="content">
         <div id="nalogPrikaz">
             <p style="text-align:center; color:#8e8e93; margin-top:40px;">Keine aktiven Aufträge.</p>
         </div>
     </div>
 
+    <!-- CHAT VIEW (MITTEILUNG) -->
     <div id="mitteilungView" class="content" style="display:none;">
         <div class="chat-container" id="chatContainer">
             <div id="chatBoxFahrer" class="chat-box"></div>
@@ -88,11 +99,7 @@
         </div>
     </div>
 
-    <div id="verlaufView" class="content" style="display:none;">
-        <h3 style="margin-top:0;">Verlauf (Erledigte Aufträge)</h3>
-        <div id="verlaufList"></div>
-    </div>
-
+    <!-- BOTTOM TAB NAVIGATION -->
     <div class="bottom-bar">
         <div id="tabEinsatz" class="tab-item active" onclick="prikaziTab('einsatz')">
             <span class="tab-icon">🧰</span>
@@ -102,20 +109,24 @@
             <span class="tab-icon">💬</span>
             <span>Mitteilung</span>
         </div>
-        <div id="tabVerlauf" class="tab-item" onclick="prikaziTab('verlauf')">
+        <div class="tab-item" onclick="prikaziTab('einsatz')">
             <span class="tab-icon">📂</span>
             <span>Verlauf</span>
         </div>
+        <div class="tab-item" onclick="prikaziTab('einsatz')">
+            <span class="tab-icon">⚙️</span>
+            <span>Einstellungen</span>
+        </div>
     </div>
 
+    <!-- STATUS SELECTION MODAL -->
     <div id="statusModal" class="modal" onclick="zatvoriModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <h3 style="margin-top:0;">Status ändern</h3>
-            <button class="btn-status-option status-1" onclick="postaviStatus('Status 1')">1. Einsatz übernommen</button>
-            <button class="btn-status-option status-2" onclick="postaviStatus('Status 2')">2. Ankunft am Einsatzort</button>
-            <button class="btn-status-option status-3" onclick="postaviStatus('Status 3')">3. Patient aufgenommen</button>
-            <button class="btn-status-option status-4" onclick="postaviStatus('Status 4')">4. Ankunft am Ziel</button>
-            <button class="btn-status-option status-5" onclick="postaviStatus('Frei')">5. Frei (Erledigt)</button>
+            <button class="btn-status-option status-1" onclick="postaviStatus('Anfahrt')">1. Anfahrt</button>
+            <button class="btn-status-option status-2" onclick="postaviStatus('Patient aufgenommen')">2. Patient aufgenommen</button>
+            <button class="btn-status-option status-3" onclick="postaviStatus('Am Ziel')">3. Am Ziel</button>
+            <button class="btn-status-option status-4" onclick="postaviStatus('Erledigt')">4. Erledigt</button>
             <button onclick="zatvoriModal()" style="margin-top:10px; background:none; border:none; color:#8e8e93; font-weight:bold; cursor:pointer;">Abbrechen</button>
         </div>
     </div>
@@ -124,8 +135,7 @@
         let trenutnoVozilo = localStorage.getItem('izabranoVozilo') || 'Fahrzeug 1';
         document.getElementById('mojeVozilo').value = trenutnoVozilo;
 
-        let mojeAktivneVoznje = [];
-        let mojeVerlaufVoznje = [];
+        let mojeVoznje = [];
         let trenutniIndeks = 0;
 
         function promeniVozilo() {
@@ -140,13 +150,10 @@
                 const resVoznje = await fetch('/api/voznje');
                 const voznje = await resVoznje.json();
 
-                const sveMoje = voznje.filter(v => v.vozilo === trenutnoVozilo);
-                mojeAktivneVoznje = sveMoje.filter(v => v.status !== 'Frei' && v.status !== 'Erledigt');
-                mojeVerlaufVoznje = sveMoje.filter(v => v.status === 'Frei' || v.status === 'Erledigt');
-
+                mojeVoznje = voznje.filter(v => v.vozilo === trenutnoVozilo);
                 osveziPrikazNaloga();
-                osveziVerlauf();
 
+                // Učitavanje poruka
                 const resPoruke = await fetch('/api/poruke');
                 const poruke = await resPoruke.json();
                 const chatBox = document.getElementById('chatBoxFahrer');
@@ -170,23 +177,22 @@
             const container = document.getElementById('nalogPrikaz');
             const indeksSpan = document.getElementById('prikazIndeksa');
 
-            if(mojeAktivneVoznje.length === 0) {
+            if(mojeVoznje.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#8e8e93; margin-top:40px;">Keine aktiven Aufträge.</p>';
                 indeksSpan.innerText = "0/0";
-                document.getElementById('statusBtn').innerText = 'Frei';
                 return;
             }
 
-            if(trenutniIndeks >= mojeAktivneVoznje.length) trenutniIndeks = mojeAktivneVoznje.length - 1;
+            if(trenutniIndeks >= mojeVoznje.length) trenutniIndeks = mojeVoznje.length - 1;
             if(trenutniIndeks < 0) trenutniIndeks = 0;
 
-            indeksSpan.innerText = `${trenutniIndeks + 1}/${mojeAktivneVoznje.length}`;
-            const v = mojeAktivneVoznje[trenutniIndeks];
+            indeksSpan.innerText = `${trenutniIndeks + 1}/${mojeVoznje.length}`;
+            const v = mojeVoznje[trenutniIndeks];
 
             document.getElementById('statusBtn').innerText = `${v.status}`;
 
             container.innerHTML = `
-                <div class="detail-row"><div class="label">Art</div><div class="value">${v.tipTransporta || 'Sitzend'}</div></div>
+                <div class="detail-row"><div class="label">Art</div><div class="value">${v.tipTransporta || '1'}</div></div>
                 <div class="detail-row"><div class="label">Überm.</div><div class="value">${v.datum || ''} ${v.vreme || ''} Uhr</div></div>
                 <div class="detail-row"><div class="label">Nr.</div><div class="value">${v.id}</div></div>
                 <div class="detail-row"><div class="label">Datum</div><div class="value">${v.datum || ''}</div></div>
@@ -218,29 +224,11 @@
                 </div>
 
                 <div class="detail-row" style="margin-top:15px;"><div class="label">Grund</div><div class="value">${v.grund || '-'}</div></div>
+                <div class="detail-row"><div class="label">L/S</div><div class="value">---</div></div>
+                <div class="detail-row"><div class="label">Med.Ger.</div><div class="value"></div></div>
+                <div class="detail-row"><div class="label">Komm.</div><div class="value">${v.napomena || '-'}</div></div>
+                <div class="detail-row"><div class="label">Kr.kasse</div><div class="value">${v.kasa || '-'}</div></div>
             `;
-        }
-
-        function osveziVerlauf() {
-            const verlaufBox = document.getElementById('verlaufList');
-            if(mojeVerlaufVoznje.length === 0) {
-                verlaufBox.innerHTML = '<p style="text-align:center; color:#8e8e93; margin-top:20px;">Keine erledigten Aufträge.</p>';
-                return;
-            }
-
-            verlaufBox.innerHTML = '';
-            mojeVerlaufVoznje.forEach(v => {
-                verlaufBox.innerHTML += `
-                    <div class="verlauf-card">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                            <b>#${v.id} - ${v.pacijent}</b>
-                            <span style="color:#34c759; font-weight:bold;">${v.status}</span>
-                        </div>
-                        <div style="font-size:14px; color:#333;">${v.adresaPolazak} ➔ ${v.adresaOdrediste}</div>
-                        <div style="font-size:12px; color:#666; margin-top:4px;">Grund: ${v.grund || '-'} | ${v.datum} u ${v.vreme}</div>
-                    </div>
-                `;
-            });
         }
 
         function prethodnaVoznja() {
@@ -251,7 +239,7 @@
         }
 
         function sledecaVoznja() {
-            if(trenutniIndeks < mojeAktivneVoznje.length - 1) {
+            if(trenutniIndeks < mojeVoznje.length - 1) {
                 trenutniIndeks++;
                 osveziPrikazNaloga();
             }
@@ -268,7 +256,7 @@
         }
 
         function otvoriModal() {
-            if(mojeAktivneVoznje.length > 0) {
+            if(mojeVoznje.length > 0) {
                 document.getElementById('statusModal').style.display = 'flex';
             }
         }
@@ -279,9 +267,9 @@
 
         async function postaviStatus(noviStatus) {
             zatvoriModal();
-            if(!mojeAktivneVoznje[trenutniIndeks]) return;
+            if(!mojeVoznje[trenutniIndeks]) return;
             
-            const id = mojeAktivneVoznje[trenutniIndeks].id;
+            const id = mojeVoznje[trenutniIndeks].id;
             await fetch('/api/status', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -293,12 +281,10 @@
         function prikaziTab(tab) {
             document.getElementById('einsatzView').style.display = tab === 'einsatz' ? 'block' : 'none';
             document.getElementById('mitteilungView').style.display = tab === 'mitteilung' ? 'block' : 'none';
-            document.getElementById('verlaufView').style.display = tab === 'verlauf' ? 'block' : 'none';
             document.getElementById('chatContainer').style.display = tab === 'mitteilung' ? 'flex' : 'none';
 
             document.getElementById('tabEinsatz').classList.toggle('active', tab === 'einsatz');
             document.getElementById('tabMitteilung').classList.toggle('active', tab === 'mitteilung');
-            document.getElementById('tabVerlauf').classList.toggle('active', tab === 'verlauf');
         }
 
         async function posaljiPoruku() {
