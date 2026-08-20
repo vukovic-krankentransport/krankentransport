@@ -11,6 +11,7 @@ const db = new sqlite3.Database('./baza.db', (err) => {
     else console.log("Verbunden mit der SQLite-Datenbank.");
 });
 
+// Tabela za vožnje
 db.run(`CREATE TABLE IF NOT EXISTS voznje (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     vozilo TEXT,
@@ -27,6 +28,16 @@ db.run(`CREATE TABLE IF NOT EXISTS voznje (
     aktivan INTEGER DEFAULT 1
 )`);
 
+// Tabela za poruke (Chat)
+db.run(`CREATE TABLE IF NOT EXISTS poruke (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    posiljalac TEXT,
+    vozilo TEXT,
+    tekst TEXT,
+    vreme TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)`);
+
+// RUTE ZA VOŽNJE
 app.get('/api/voznje', (req, res) => {
     db.all(`SELECT * FROM voznje WHERE aktivan = 1 ORDER BY id ASC`, [], (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -83,6 +94,22 @@ app.post('/api/reset', (req, res) => {
     db.run(`UPDATE voznje SET aktivan = 0 WHERE aktivan = 1`, [], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
+    });
+});
+
+// RUTE ZA PORUKE (CHAT)
+app.get('/api/poruke', (req, res) => {
+    db.all(`SELECT * FROM poruke ORDER BY id ASC`, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+app.post('/api/poruke', (req, res) => {
+    const { posiljalac, vozilo, tekst } = req.body;
+    db.run(`INSERT INTO poruke (posiljalac, vozilo, tekst) VALUES (?, ?, ?)`, [posiljalac, vozilo, tekst], function(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ success: true, id: this.lastID });
     });
 });
 
