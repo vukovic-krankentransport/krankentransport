@@ -1,116 +1,145 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
+const path = require('path');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const db = new sqlite3.Database('./baza.db', (err) => {
-    if (err) console.error("Fehler beim Öffnen der Datenbank:", err.message);
-    else console.log("Verbunden mit der SQLite-Datenbank.");
-});
+const DATA_FILE = path.join(__dirname, 'baza_podataka.json');
 
-// Tabela za vožnje
-db.run(`CREATE TABLE IF NOT EXISTS voznje (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    vozilo TEXT,
-    pacijent TEXT,
-    kasa TEXT,
-    vreme TEXT,
-    datum TEXT,
-    tipTransporta TEXT,
-    adresaPolazak TEXT,
-    adresaOdrediste TEXT,
-    infekcija TEXT,
-    napomena TEXT,
-    status TEXT,
-    aktivan INTEGER DEFAULT 1
-)`);
+// Inicijalna struktura baze
+let baza = {
+    voznje: [],
+    poruke: []
+};
 
-// Tabela za poruke
-db.run(`CREATE TABLE IF NOT EXISTS poruke (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    posiljalac TEXT,
-    vozilo TEXT,
-    tekst TEXT,
-    vreme TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)`);
+// Učitavanje baze sa diska
+if (fs.existsSync(DATA_FILE)) {
+    try {
+        const raw = fs.readFileSync(DATA_FILE, 'utf8');
+        baza = JSON.parse(raw);
+        if (!baza.voznje) baza.voznje = [];
+        if (!baza.poruke) baza.poruke = [];
+    } catch (e) {
+        console.error("Greška pri čitanju baze:", e);
+    }
+}
 
-// API RUTE ZA VOŽNJE
+function sacuvajBazu() {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(baza, null, 2), 'utf8');
+}
+
+// Pomocna funkcija za dobijanje danasnjeg datuma u YYYY-MM-DD formatu
+function getDanasnjiDatum() {
+    return new Date().toISOString().split('T')[0];
+}
+
+// ---------------- API RUTE ----------------
+
+// GET Vožnje (Aktivne na radnoj tabli)
 app.get('/api/voznje', (req, res) => {
-    db.all(`SELECT * FROM voznje WHERE aktivan = 1 ORDER BY id ASC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+    // Vraćaju se samo vožnje koje nisu "Erledigt" ili su kreirane danas
+    const danas = getDanasnjiDatum();
+    const aktivne = baza.voznje.filter(v => v.status !== 'Erledigt' || v.datum === danas);
+    res.json(aktivne);
 });
 
-app.get('/api/historija', (req, res) => {
-    const { datum, vozilo } = req.query;
-    let query = `SELECT * FROM voznje WHERE 1=1`;
-    let params = [];
-
-    if (datum) {
-        query += ` AND datum = ?`;
-        params.push(datum);
-    }
-    if (vozilo && vozilo !== 'Sva vozila') {
-        query += ` AND vozilo = ?`;
-        params.push(vozilo);
-    }
-
-    query += ` ORDER BY id ASC`;
-
-    db.all(query, params, (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
-});
-
+// POST Nova vožnja
 app.post('/api/voznje', (req, res) => {
-    const { vozilo, pacijent, kasa, vreme, datum, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena } = req.body;
-    const unosDatum = datum || new Date().toISOString().split('T')[0];
-
-    const sql = `INSERT INTO voznje (vozilo, pacijent, kasa, vreme, datum, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena, status, aktivan)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Erteilt', 1)`;
-    
-    db.run(sql, [vozilo, pacijent, kasa, vreme, unosDatum, tipTransporta || 'Sitzend', adresaPolazak, adresaOdrediste, infekcija, napomena || ''], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, id: this.lastID });
-    });
+    const novaVoznja = {
+        id: baza.voznje.length + 1,
+        vozilo: req.body.vozilo,
+        pacijent: req.body.pacijent,
+        kasa: req.body.kasa || '',
+        datum: req.body.datum || getDanasnjiDatum(),
+        vreme: req.body.vreme || '',
+        tipTransporta: req.body.tipTransporta || 'Sitzend',
+        adresaPolazak: req.body.adresaPolazak,
+        adresaOdrediste: req.body.adresaOdrediste || '',
+        infekcija: req.body.infekcija || 'NEIN',
+        napomena: req.body.napomena || '',
+        status: 'Offen',
+        kreirano: new Date().toISOString()
+    };
+    baza.voznje.push(novaVoznja);
+    sacuvajBazu();
+    res.json({ success: true, voznja: novaVoznja });
 });
 
+// POST Promena statusa
 app.post('/api/status', (req, res) => {
     const { id, status } = req.body;
-    const aktivan = (status === 'Erledigt') ? 0 : 1;
-
-    db.run(`UPDATE voznje SET status = ?, aktivan = ? WHERE id = ?`, [status, aktivan, id], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
+    const voznja = baza.voznje.find(v => v.id === parseInt(id));
+    if (voznja) {
+        voznja.status = status;
+        sacuvajBazu();
         res.json({ success: true });
-    });
+    } else {
+        res.status(404).json({ error: 'Vožnja nije pronađena' });
+    }
 });
 
-app.post('/api/reset', (req, res) => {
-    db.run(`UPDATE voznje SET aktivan = 0 WHERE aktivan = 1`, [], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true });
-    });
-});
-
-// API RUTE ZA CHAT (Prikazuje sve poruke hronološki)
+// GET Poruke (Aktivni dnevni chat)
 app.get('/api/poruke', (req, res) => {
-    db.all(`SELECT * FROM poruke ORDER BY id ASC`, [], (err, rows) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(rows);
-    });
+    const danas = getDanasnjiDatum();
+    // Vraćaju se samo današnje poruke za aktivni chat
+    const danasnjePoruke = baza.poruke.filter(p => p.datum === danas);
+    res.json(danasnjePoruke);
 });
 
+// POST Nova poruka
 app.post('/api/poruke', (req, res) => {
-    const { posiljalac, vozilo, tekst } = req.body;
-    db.run(`INSERT INTO poruke (posiljalac, vozilo, tekst) VALUES (?, ?, ?)`, [posiljalac, vozilo, tekst], function(err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ success: true, id: this.lastID });
-    });
+    const sada = new Date();
+    const novaPoruka = {
+        id: baza.poruke.length + 1,
+        posiljalac: req.body.posiljalac,
+        vozilo: req.body.vozilo,
+        tekst: req.body.tekst,
+        datum: req.body.datum || getDanasnjiDatum(),
+        vreme: sada.toTimeString().split(' ')[0].substring(0, 5),
+        timestamp: sada.toISOString()
+    };
+    baza.poruke.push(novaPoruka);
+    sacuvajBazu();
+    res.json({ success: true, poruka: novaPoruka });
 });
 
-app.listen(PORT, () => console.log(`Server läuft auf Port ${PORT}`));
+// GET Historija (Arhiva vožnji i poruka po datumu)
+app.get('/api/historija', (req, res) => {
+    const { datum, vozilo } = req.query;
+
+    let voznje = baza.voznje;
+    let poruke = baza.poruke;
+
+    if (datum) {
+        voznje = voznje.filter(v => v.datum === datum);
+        poruke = poruke.filter(p => p.datum === datum);
+    }
+
+    if (vozilo && vozilo !== 'Sva vozila') {
+        voznje = voznje.filter(v => v.vozilo === vozilo);
+        poruke = poruke.filter(p => p.vozilo === vozilo);
+    }
+
+    res.json({ voznje, poruke });
+});
+
+// GET Backup cele baze
+app.get('/api/backup', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=backup_krankentransport_${getDanasnjiDatum()}.json`);
+    res.send(JSON.stringify(baza, null, 2));
+});
+
+// Reset za novi dan
+app.post('/api/reset', (req, res) => {
+    // Svi nedovršeni zadaci se prebacuju u Erledigt ili se osvežava prikaz
+    sacuvajBazu();
+    res.json({ success: true });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server pokrenut na portu ${PORT}`);
+});
