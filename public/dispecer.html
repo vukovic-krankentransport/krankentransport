@@ -25,7 +25,6 @@
         th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
         th { background: #b02a37; color: white; }
         
-        /* CHAT ZENTRALE */
         .chat-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 580px; display: flex; flex-direction: column; border: 2px solid #ccc; transition: border-color 0.3s; }
         .chat-card.nova-poruka { border-color: #dc3545; animation: blink 1s infinite; }
         @keyframes blink { 0% { box-shadow: 0 0 10px #dc3545; } 50% { box-shadow: 0 0 0px #dc3545; } 100% { box-shadow: 0 0 10px #dc3545; } }
@@ -87,6 +86,7 @@
                             </select>
                         </div>
                         <div><label><b>Patient:</b></label><input type="text" id="pacijent" placeholder="Name"></div>
+                        <div><label><b>Geburtsdatum:</b></label><input type="date" id="datumRodjenja"></div>
                         <div><label><b>Krankenkasse:</b></label><input type="text" id="kasa" placeholder="AOK..."></div>
                         <div><label><b>Datum:</b></label><input type="date" id="datum"></div>
                         <div><label><b>Zeit:</b></label><input type="time" id="vreme"></div>
@@ -119,7 +119,7 @@
                                 <th>Nr.</th>
                                 <th>Zeit</th>
                                 <th>Fahrzeug</th>
-                                <th>Patient</th>
+                                <th>Patient (Geb.Datum)</th>
                                 <th>Art</th>
                                 <th>Von</th>
                                 <th>Nach</th>
@@ -188,7 +188,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Nr.</th><th>Datum</th><th>Zeit</th><th>Fahrzeug</th><th>Patient</th><th>Von -> Nach</th><th>Status</th>
+                                <th>Nr.</th><th>Datum</th><th>Zeit</th><th>Fahrzeug</th><th>Patient (Geb.Datum)</th><th>Von -> Nach</th><th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaHistorija"></tbody>
@@ -212,8 +212,9 @@
 
         let aktivnoVoziloChat = "Fahrzeug 1";
         let neprocitanePoruke = {};
-        let ukupnoPorukaPre = 0;
+        let ukupnoPorukaPre = -1;
         let audioCtx = null;
+        let trenutneHistorijeskeVoznje = [];
 
         function aktivirajAudio() {
             if (!audioCtx) {
@@ -225,20 +226,18 @@
             document.getElementById('audioNotice').style.display = 'none';
         }
 
-        // ZVUČNI SIGNAL BIP-BIP (DVA PUTA)
         function svirajZvukDispo() {
             try {
                 aktivirajAudio();
                 if (!audioCtx) return;
 
                 const sada = audioCtx.currentTime;
-                // Dva zvučna signala (0.0s i 0.25s)
                 [0, 0.25].forEach((delay) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(1046.50, sada + delay); // Visoki C6 ton (Bip)
+                    osc.frequency.setValueAtTime(1046.50, sada + delay);
                     
                     gain.gain.setValueAtTime(0.8, sada + delay);
                     gain.gain.exponentialRampToValueAtTime(0.01, sada + delay + 0.18);
@@ -297,6 +296,7 @@
         async function dodajNalog() {
             const vozilo = document.getElementById('vozilo').value;
             const pacijent = document.getElementById('pacijent').value;
+            const datumRodjenja = document.getElementById('datumRodjenja').value;
             const kasa = document.getElementById('kasa').value;
             const datum = document.getElementById('datum').value;
             const vreme = document.getElementById('vreme').value;
@@ -311,10 +311,11 @@
             await fetch('/api/voznje', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vozilo, pacijent, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena })
+                body: JSON.stringify({ vozilo, pacijent, datumRodjenja, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena })
             });
 
             document.getElementById('pacijent').value = '';
+            document.getElementById('datumRodjenja').value = '';
             document.getElementById('adresaPolazak').value = '';
             ucitaj();
         }
@@ -327,12 +328,13 @@
                 tabela.innerHTML = '';
 
                 podaci.forEach(v => {
+                    const geb = v.datumRodjenja ? ` (${v.datumRodjenja})` : '';
                     tabela.innerHTML += `
                         <tr>
                             <td><b>#${v.id}</b></td>
                             <td>${v.vreme || '-'}</td>
                             <td><b>${v.vozilo}</b></td>
-                            <td>${v.pacijent}</td>
+                            <td>${v.pacijent}${geb}</td>
                             <td>${v.tipTransporta || 'Sitzend'}</td>
                             <td>${v.adresaPolazak}</td>
                             <td>${v.adresaOdrediste || '-'}</td>
@@ -349,11 +351,10 @@
                 const res = await fetch('/api/poruke');
                 const poruke = await res.json();
 
-                // Provera za zvučni signal kada stigne NOVA poruka od bilo kog vozača
-                if (ukupnoPorukaPre > 0 && poruke.length > ukupnoPorukaPre) {
+                if (ukupnoPorukaPre !== -1 && poruke.length > ukupnoPorukaPre) {
                     const poslednja = poruke[poruke.length - 1];
                     if (poslednja.posiljalac !== 'Zentrale') {
-                        svirajZvukDispo(); // Sviraj BIP-BIP!
+                        svirajZvukDispo();
                         document.getElementById('chatCard').classList.add('nova-poruka');
                     }
                 }
@@ -401,6 +402,42 @@
             ucitajPoruke();
         }
 
+        async function ucitajHistoriju() {
+            const datum = document.getElementById('filterDatum').value;
+            const vozilo = document.getElementById('filterVozilo').value;
+
+            const res = await fetch(`/api/historija?datum=${datum}&vozilo=${encodeURIComponent(vozilo)}`);
+            const podaci = await res.json();
+            trenutneHistorijeskeVoznje = podaci.voznje;
+
+            const tabela = document.getElementById('tabelaHistorija');
+            tabela.innerHTML = '';
+            podaci.voznje.forEach(v => {
+                const geb = v.datumRodjenja ? ` (${v.datumRodjenja})` : '';
+                tabela.innerHTML += `
+                    <tr>
+                        <td><b>#${v.id}</b></td>
+                        <td>${v.datum}</td>
+                        <td>${v.vreme || '-'}</td>
+                        <td><b>${v.vozilo}</b></td>
+                        <td>${v.pacijent}${geb}</td>
+                        <td>${v.adresaPolazak} -> ${v.adresaOdrediste}</td>
+                        <td><b>${v.status}</b></td>
+                    </tr>
+                `;
+            });
+
+            const chatBox = document.getElementById('chatArchiveBox');
+            chatBox.innerHTML = '';
+            podaci.poruke.forEach(p => {
+                chatBox.innerHTML += `
+                    <div class="chat-msg ${p.posiljalac === 'Zentrale' ? 'dispo' : 'fahrer'}">
+                        <small>[${p.vreme}]</small> <b>${p.posiljalac} (${p.vozilo}):</b> ${p.tekst}
+                    </div>
+                `;
+            });
+        }
+
         function downloadBackup() {
             window.location.href = '/api/backup';
         }
@@ -408,9 +445,9 @@
         function exportToCSV() {
             if(!trenutneHistorijeskeVoznje.length) return alert('Keine Daten zum Exportieren!');
             
-            let csv = 'ID;Datum;Zeit;Fahrzeug;Patient;Krankenkasse;Von;Nach;Status\n';
+            let csv = 'ID;Datum;Zeit;Fahrzeug;Patient;Geburtsdatum;Krankenkasse;Von;Nach;Status\n';
             trenutneHistorijeskeVoznje.forEach(v => {
-                csv += `${v.id};${v.datum};${v.vreme};${v.vozilo};${v.pacijent};${v.kasa};${v.adresaPolazak};${v.adresaOdrediste};${v.status}\n`;
+                csv += `${v.id};${v.datum};${v.vreme};${v.vozilo};${v.pacijent};${v.datumRodjenja || ''};${v.kasa};${v.adresaPolazak};${v.adresaOdrediste};${v.status}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
