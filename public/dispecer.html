@@ -85,20 +85,22 @@
                                 <option value="Fahrzeug 10">Fahrzeug 10</option>
                             </select>
                         </div>
-                        <div><label><b>Patient:</b></label><input type="text" id="pacijent" placeholder="Name"></div>
-                        <div><label><b>Geburtsdatum:</b></label><input type="date" id="datumRodjenja"></div>
+                        <div><label><b>Patient (Name):</b></label><input type="text" id="pacijent" placeholder="Name"></div>
+                        <div><label><b>Geburtsdatum (Geburt):</b></label><input type="date" id="datumRodjenja"></div>
                         <div><label><b>Krankenkasse:</b></label><input type="text" id="kasa" placeholder="AOK..."></div>
                         <div><label><b>Datum:</b></label><input type="date" id="datum"></div>
                         <div><label><b>Zeit:</b></label><input type="time" id="vreme"></div>
                         <div>
                             <label><b>Art:</b></label>
                             <select id="tipTransporta">
-                                <option value="Sitzend">🚶 Sitzend</option>
-                                <option value="Liegend">🛏️ Liegend</option>
+                                <option value="1">1 (Sitzend)</option>
+                                <option value="2">2 (Liegend)</option>
+                                <option value="3">3 (Tragestuhl)</option>
                             </select>
                         </div>
                         <div><label><b>Von (Start):</b></label><input type="text" id="adresaPolazak" placeholder="Adresse"></div>
                         <div><label><b>Nach (Ziel):</b></label><input type="text" id="adresaOdrediste" placeholder="Adresse"></div>
+                        <div><label><b>Grund:</b></label><input type="text" id="grund" placeholder="Rückfahrt FF..."></div>
                         <div>
                             <label><b>Infektion:</b></label>
                             <select id="infekcija">
@@ -106,7 +108,7 @@
                                 <option value="JA">JA</option>
                             </select>
                         </div>
-                        <div><label><b>Hinweis:</b></label><input type="text" id="napomena" placeholder="Info"></div>
+                        <div><label><b>Hinweis / Komm:</b></label><input type="text" id="napomena" placeholder="Info"></div>
                     </div>
                     <button class="btn-submit" onclick="dodajNalog()">Auftrag senden</button>
                 </div>
@@ -119,7 +121,7 @@
                                 <th>Nr.</th>
                                 <th>Zeit</th>
                                 <th>Fahrzeug</th>
-                                <th>Patient (Geb.Datum)</th>
+                                <th>Patient (Geburt)</th>
                                 <th>Art</th>
                                 <th>Von</th>
                                 <th>Nach</th>
@@ -188,7 +190,7 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Nr.</th><th>Datum</th><th>Zeit</th><th>Fahrzeug</th><th>Patient (Geb.Datum)</th><th>Von -> Nach</th><th>Status</th>
+                                <th>Nr.</th><th>Datum</th><th>Zeit</th><th>Fahrzeug</th><th>Patient (Geburt)</th><th>Von -> Nach</th><th>Status</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaHistorija"></tbody>
@@ -303,6 +305,7 @@
             const tipTransporta = document.getElementById('tipTransporta').value;
             const adresaPolazak = document.getElementById('adresaPolazak').value;
             const adresaOdrediste = document.getElementById('adresaOdrediste').value;
+            const grund = document.getElementById('grund').value;
             const infekcija = document.getElementById('infekcija').value;
             const napomena = document.getElementById('napomena').value;
 
@@ -311,12 +314,13 @@
             await fetch('/api/voznje', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ vozilo, pacijent, datumRodjenja, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, infekcija, napomena })
+                body: JSON.stringify({ vozilo, pacijent, datumRodjenja, kasa, datum, vreme, tipTransporta, adresaPolazak, adresaOdrediste, grund, infekcija, napomena })
             });
 
             document.getElementById('pacijent').value = '';
             document.getElementById('datumRodjenja').value = '';
             document.getElementById('adresaPolazak').value = '';
+            document.getElementById('grund').value = '';
             ucitaj();
         }
 
@@ -335,7 +339,7 @@
                             <td>${v.vreme || '-'}</td>
                             <td><b>${v.vozilo}</b></td>
                             <td>${v.pacijent}${geb}</td>
-                            <td>${v.tipTransporta || 'Sitzend'}</td>
+                            <td>${v.tipTransporta || '1'}</td>
                             <td>${v.adresaPolazak}</td>
                             <td>${v.adresaOdrediste || '-'}</td>
                             <td><span style="color: blue; font-weight: bold;">${v.status}</span></td>
@@ -445,9 +449,9 @@
         function exportToCSV() {
             if(!trenutneHistorijeskeVoznje.length) return alert('Keine Daten zum Exportieren!');
             
-            let csv = 'ID;Datum;Zeit;Fahrzeug;Patient;Geburtsdatum;Krankenkasse;Von;Nach;Status\n';
+            let csv = 'ID;Datum;Zeit;Fahrzeug;Patient;Geburtsdatum;Krankenkasse;Von;Nach;Grund;Status\n';
             trenutneHistorijeskeVoznje.forEach(v => {
-                csv += `${v.id};${v.datum};${v.vreme};${v.vozilo};${v.pacijent};${v.datumRodjenja || ''};${v.kasa};${v.adresaPolazak};${v.adresaOdrediste};${v.status}\n`;
+                csv += `${v.id};${v.datum};${v.vreme};${v.vozilo};${v.pacijent};${v.datumRodjenja || ''};${v.kasa};${v.adresaPolazak};${v.adresaOdrediste};${v.grund || ''};${v.status}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
