@@ -51,11 +51,9 @@ function getDanasnjiDatum() {
     return new Date().toISOString().split('T')[0];
 }
 
-// GET Vožnje (Aktivne + današnje završene)
+// GET Sve vožnje
 app.get('/api/voznje', (req, res) => {
-    const danas = getDanasnjiDatum();
-    const aktivne = baza.voznje.filter(v => v.status !== 'Erledigt' || v.datum === danas);
-    res.json(aktivne);
+    res.json(baza.voznje);
 });
 
 // POST Nova vožnja
@@ -74,7 +72,7 @@ app.post('/api/voznje', (req, res) => {
         infekcija: req.body.infekcija || 'NEIN',
         napomena: req.body.napomena || '-',
         grund: req.body.grund || '-',
-        status: 'Offen',
+        status: '1. Anfahrt',
         kreirano: new Date().toISOString()
     };
     baza.voznje.push(novaVoznja);
@@ -105,9 +103,7 @@ app.delete('/api/voznje/:id', (req, res) => {
 
 // GET Poruke
 app.get('/api/poruke', (req, res) => {
-    const danas = getDanasnjiDatum();
-    const danasnjePoruke = baza.poruke.filter(p => p.datum === danas);
-    res.json(danasnjePoruke);
+    res.json(baza.poruke);
 });
 
 // POST Nova poruka
@@ -127,10 +123,9 @@ app.post('/api/poruke', (req, res) => {
     res.json({ success: true, poruka: novaPoruka });
 });
 
-// GET Historija
+// GET Historija za filtriranje
 app.get('/api/historija', (req, res) => {
     const { datum, vozilo } = req.query;
-
     let voznje = baza.voznje;
     let poruke = baza.poruke;
 
