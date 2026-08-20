@@ -1,152 +1,95 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const fs = require('fs');
 const path = require('path');
+
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const DATA_FILE = path.join(__dirname, 'baza_podataka.json');
-const BACKUP_FILE = path.join(__dirname, 'baza_podataka_backup.json');
+const DATA_FILE = path.join(__dirname, 'data.json');
 
-let baza = {
-    voznje: [],
-    poruke: []
-};
-
-function ucitajBazu() {
-    if (fs.existsSync(DATA_FILE)) {
-        try {
-            const raw = fs.readFileSync(DATA_FILE, 'utf8');
-            if (raw.trim().length > 0) {
-                baza = JSON.parse(raw);
-            }
-        } catch (e) {
-            console.error("Greška pri čitanju baze!", e);
-            if (fs.existsSync(BACKUP_FILE)) {
-                try {
-                    const rawBackup = fs.readFileSync(BACKUP_FILE, 'utf8');
-                    baza = JSON.parse(rawBackup);
-                } catch(err) {}
-            }
-        }
+function readData() {
+    if (!fs.existsSync(DATA_FILE)) {
+        return { voznje: [], poruke: [] };
     }
-    if (!baza.voznje) baza.voznje = [];
-    if (!baza.poruke) baza.poruke = [];
+    const raw = fs.readFileSync(DATA_FILE);
+    return JSON.parse(raw);
 }
 
-ucitajBazu();
-
-function sacuvajBazu() {
-    try {
-        const podaci = JSON.stringify(baza, null, 2);
-        fs.writeFileSync(DATA_FILE, podaci, 'utf8');
-        fs.writeFileSync(BACKUP_FILE, podaci, 'utf8');
-    } catch (e) {
-        console.error("Greška pri čuvanju baze:", e);
-    }
+function saveData(data) {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-function getDanasnjiDatum() {
-    return new Date().toISOString().split('T')[0];
-}
-
-// GET Vožnje
+// Get Vožnje
 app.get('/api/voznje', (req, res) => {
-    const danas = getDanasnjiDatum();
-    const aktivne = baza.voznje.filter(v => v.status !== 'Erledigt' || v.datum === danas);
-    res.json(aktivne);
+    const data = readData();
+    res.json(data.voznje);
 });
 
-// POST Nova vožnja
+// Dodaj / Izmeni Vožnju
 app.post('/api/voznje', (req, res) => {
-    const novaVoznja = {
-        id: baza.voznje.length + 1,
-        vozilo: req.body.vozilo,
-        pacijent: req.body.pacijent,
-        datumRodjenja: req.body.datumRodjenja || 'k.A.',
-        kasa: req.body.kasa || '-',
-        datum: req.body.datum || getDanasnjiDatum(),
-        vreme: req.body.vreme || '00:00',
-        tipTransporta: req.body.tipTransporta || '1',
-        adresaPolazak: req.body.adresaPolazak,
-        adresaOdrediste: req.body.adresaOdrediste || '-',
-        infekcija: req.body.infekcija || 'NEIN',
-        napomena: req.body.napomena || '-',
-        grund: req.body.grund || '-',
-        status: 'Offen',
-        kreirano: new Date().toISOString()
-    };
-    baza.voznje.push(novaVoznja);
-    sacuvajBazu();
+    const data = readData();
+    const novaVoznja = req.body;
+
+    if (!novaVoznja.id) {
+        novaVoznja.id = Date.now().toString().slice(-4);
+    }
+
+    const index = data.voznje.findIndex(v => v.id === novaVoznja.id);
+    if (index !== -1) {
+        data.voznje[index] = { ...data.voznje[index], ...novaVoznja };
+    } else {
+        novaVoznja.status = novaVoznja.status || 'Status 1';
+        data.voznje.push(novaVoznja);
+    }
+
+    saveData(data);
+    io.emit('update', data);
     res.json({ success: true, voznja: novaVoznja });
 });
 
-// POST Promena statusa
+// Izmena Statusa
 app.post('/api/status', (req, res) => {
     const { id, status } = req.body;
-    const voznja = baza.voznje.find(v => v.id === parseInt(id));
+    const data = readData();
+    const voznja = data.voznje.find(v => v.id === id);
     if (voznja) {
         voznja.status = status;
-        sacuvajBazu();
+        saveData(data);
+        io.emit('update', data);
         res.json({ success: true });
     } else {
-        res.status(404).json({ error: 'Vožnja nije pronađena' });
+        res.status(404).json({ error: 'Nije pronadjeno' });
     }
 });
 
-// GET Poruke
+// Poruke
 app.get('/api/poruke', (req, res) => {
-    const danas = getDanasnjiDatum();
-    const danasnjePoruke = baza.poruke.filter(p => p.datum === danas);
-    res.json(danasnjePoruke);
+    const data = readData();
+    res.json(data.poruke);
 });
 
-// POST Nova poruka
 app.post('/api/poruke', (req, res) => {
-    const sada = new Date();
-    const novaPoruka = {
-        id: baza.poruke.length + 1,
-        posiljalac: req.body.posiljalac,
-        vozilo: req.body.vozilo,
-        tekst: req.body.tekst,
-        datum: req.body.datum || getDanasnjiDatum(),
-        vreme: sada.toTimeString().split(' ')[0].substring(0, 5),
-        timestamp: sada.toISOString()
+    const data = readData();
+    const { posiljalac, vozilo, tekst } = req.body;
+    const poruka = {
+        id: Date.now(),
+        posiljalac,
+        vozilo,
+        tekst,
+        vreme: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    baza.poruke.push(novaPoruka);
-    sacuvajBazu();
-    res.json({ success: true, poruka: novaPoruka });
+    data.poruke.push(poruka);
+    saveData(data);
+    io.emit('nova_poruka', poruka);
+    res.json({ success: true });
 });
 
-// GET Historija
-app.get('/api/historija', (req, res) => {
-    const { datum, vozilo } = req.query;
-
-    let voznje = baza.voznje;
-    let poruke = baza.poruke;
-
-    if (datum) {
-        voznje = voznje.filter(v => v.datum === datum);
-        poruke = poruke.filter(p => p.datum === datum);
-    }
-
-    if (vozilo && vozilo !== 'Sva vozila') {
-        voznje = voznje.filter(v => v.vozilo === vozilo);
-        poruke = poruke.filter(p => p.vozilo === vozilo);
-    }
-
-    res.json({ voznje, poruke });
-});
-
-// GET Backup
-app.get('/api/backup', (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename=backup_${getDanasnjiDatum()}.json`);
-    res.send(JSON.stringify(baza, null, 2));
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server pokrenut na portu ${PORT}`);
+server.listen(3000, () => {
+    console.log('Server radi na portu 3000');
 });
